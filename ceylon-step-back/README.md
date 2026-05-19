@@ -115,30 +115,97 @@ All routes are mounted under `/api/v1`. Top-level groups:
 
 ## Architecture
 
+The backend is a **modular monolith** built on NestJS. It follows a strict **three-layer architecture** (Controller → Service → Prisma), with cross-cutting concerns handled by guards, pipes, filters, and middleware composed in a single bootstrap pipeline. There is no message broker, no microservice split, and no separate worker process — background work (mail send, audit log writes) happens in-request, with `EventEmitterModule` available for fire-and-forget hand-offs inside the same node.
+
+### Architectural style
+
+- **Modular monolith.** Each business capability (`auth`, `admin`, `partner/guide`, `partner/transport-provider`, `partner/applications`, `public`, `storage`, `mail`) is a self-contained Nest module with its own controllers, services, DTOs, and (where applicable) guards. The `AppModule` is the composition root that wires them together.
+- **Layered within a module.** Every module obeys the same internal shape:
+  - **Controller** — HTTP boundary. Owns route paths, Swagger decorators, auth/role decorators, DTO validation. Contains no business logic.
+  - **Service** — domain logic + Prisma calls. Returns plain objects, raises `HttpException` subclasses on failure, writes `AuditLog` rows where required.
+  - **DTOs** — request/response shape, validated by `class-validator` via the global `ValidationPipe`.
+  - **Prisma** — the only data-access layer. There is no repository abstraction on top.
+- **Shared kernel** under `common/` and `prisma/`: the global exception filter, CSRF controller, rate-limit guard + decorator, and the singleton `PrismaService`.
+
+### Request pipeline
+
+Every incoming HTTP request flows through the same pipeline, configured once in `src/bootstrap/setup-app.ts`:
+
 ```
-src/
-├─ main.ts                  # bootstrap (calls setupApp + listens)
-├─ app.module.ts            # composition root
-├─ bootstrap/
-│   └─ setup-app.ts         # CORS, helmet, sessions, CSRF, global filter, validation pipe
-├─ common/
-│   └─ filters/             # GlobalExceptionFilter unifies error shape
-├─ config/                  # @nestjs/config schema + accessors
-├─ prisma/
-│   ├─ prisma.service.ts    # singleton PrismaClient
-│   ├─ prisma.module.ts
-│   └─ seed.ts              # `pnpm db:seed`
-├─ auth/                    # local + OAuth strategies, guards, decorators, controllers
-├─ rbac/                    # RolesGuard + @Roles decorator
-├─ sessions/                # /sessions/me + role helpers
-├─ mail/                    # nodemailer + handlebars templates
-├─ storage/                 # Supabase upload service (StorageService.uploadFile)
-├─ admin/                   # admin-only modules (users, guides, transport providers)
-├─ partner/                 # partner self-service: applications, guide, transport-provider
-│   └─ transport-provider/  # apply, profile, vehicles, safari jeeps, driver services,
-│                           # itineraries, type-change requests
-└─ public/                  # unauthenticated read endpoints (guide listings, etc.)
+HTTP request
+  │
+  ▼
+helmet  ───────────────►  security headers
+  │
+  ▼
+CORS  ─────────────────►  allow-listed origins, credentials: true
+  │
+  ▼
+express-session  ──────►  cookie → t_sessions row (connect-pg-simple)
+  │
+  ▼
+csurf (optional)  ─────►  CSRF token check for state-mutating verbs
+  │
+  ▼
+SessionAuthGuard  ─────►  loads m_users row + roles onto req.user
+  │
+  ▼
+RolesGuard (+ @Roles)  ►  RBAC: ADMIN / SUPER_ADMIN / GUIDE / TRANSPORT_PROVIDER
+  │
+  ▼
+ValidationPipe  ───────►  whitelist + transform DTOs (class-validator)
+  │
+  ▼
+Controller → Service → PrismaService → PostgreSQL
+  │
+  ▼
+GlobalExceptionFilter  ►  unified JSON error shape
+  │
+  ▼
+HTTP response
 ```
+
+### Cross-cutting concerns
+
+| Concern | Implementation | Where it lives |
+| --- | --- | --- |
+| Authentication | `SessionAuthGuard` — reads `req.session.userId`, hydrates the user with roles, checks `sessionInvalidBefore` for forced logout | `src/auth/guards/session-auth.guard.ts` |
+| Authorisation | `RolesGuard` + `@Roles(...)` decorator — reads metadata via `Reflector`, intersects with the user's roles | `src/rbac/` |
+| Input validation | Global `ValidationPipe` (`whitelist`, `forbidNonWhitelisted`, `transform`) + per-DTO `class-validator` decorators | `bootstrap/setup-app.ts` + every `dto/` folder |
+| Error handling | `GlobalExceptionFilter` — normalises `HttpException`, CSRF errors, and unhandled exceptions into one JSON envelope; logs the stack for 5xx | `src/common/filters/` |
+| CSRF | `csurf` middleware, gated by `CSRF_ENABLED`; token issued by `CsrfController`, validated on every mutating verb | `bootstrap/setup-app.ts` + `src/common/csrf/` |
+| Rate limiting | `RateLimitGuard` + `@RateLimit(...)` decorator, backed by `rate-limiter-flexible` (in-memory). Applied to OTP, login, password-reset endpoints | `src/common/rate-limit/` |
+| Audit logging | Services write a `t_audit_logs` row inside the same Prisma transaction as the mutation | per-service |
+| Eventing | `@nestjs/event-emitter` for in-process pub/sub (e.g. `user.registered` → send welcome mail) | `EventEmitterModule.forRoot()` in `app.module.ts` |
+| Config | `@nestjs/config` with a `validateEnv` schema run at boot; missing/invalid env crashes the app fast | `src/config/` |
+
+### Auth & session model
+
+- **Stateful sessions, not JWTs.** Cookie-based; `connect-pg-simple` stores the session row in `t_sessions`. Sliding expiry (`rolling: true`), 7-day max age.
+- **Passport** powers local + OAuth strategies (Google, Facebook, Apple) — registered conditionally based on env vars so missing credentials don't crash boot.
+- **OTP** is a separate sub-module (`auth/otp/`) for password reset and email verification.
+- **RBAC** is many-to-many: `m_users` ↔ `r_user_roles` ↔ `m_roles`. A user can be both `GUIDE` and `TRANSPORT_PROVIDER`. Role checks happen post-authentication.
+- **Forced invalidation:** bumping `m_users.sessionInvalidBefore` retroactively kills every session issued before that timestamp.
+
+### Persistence layer
+
+- Single `PrismaService` (`OnModuleInit` opens the pool, `enableShutdownHooks` closes it cleanly).
+- All migrations live in `prisma/migrations/`; production deploys use `prisma migrate deploy`.
+- Multi-step mutations (apply + audit log, approve + create profile) run inside `prisma.$transaction(...)` so partial writes can't leak.
+- No raw SQL except in the seeder and a handful of hand-written rename migrations.
+
+### Integrations (anti-corruption boundaries)
+
+Each external dependency is wrapped in a single service so the rest of the code stays unaware of the SDK:
+
+| External | Wrapper | Purpose |
+| --- | --- | --- |
+| Supabase Storage | `StorageService` (`src/storage/`) | File uploads, returns the public URL the caller persists |
+| SMTP | `MailService` (`src/mail/`) | Renders Handlebars templates, sends via nodemailer |
+| Google / Facebook / Apple OAuth | Passport strategies under `src/auth/oauth/strategies/` | Token exchange, normalised into the same `AuthIdentity` shape |
+| Postgres session store | `connect-pg-simple` | Session persistence (configured once in `setup-app.ts`) |
+
+Swapping any of these (e.g. Supabase → S3) is a one-file change.
 
 ### Database conventions
 
