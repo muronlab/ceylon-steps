@@ -277,3 +277,6 @@ pnpm test:e2e       # test/jest-e2e.json — supertest against the Nest app
 | Reset dev DB + reseed | `npx prisma migrate reset && pnpm db:seed` |
 | Add a migration without applying | `npx prisma migrate dev --create-only --name <x>` |
 | Regenerate Prisma client | `pnpm prisma:generate` |
+| Seed required data via raw SQL | `psql "$DATABASE_URL" -f ../scripts/script.sql` |
+
+> [`../scripts/script.sql`](../scripts/script.sql) is the SQL equivalent of `pnpm db:seed` — idempotent (`ON CONFLICT DO NOTHING`) and safe to re-run. Use it when you don't have Node available (e.g. in a DBA-managed prod environment) or when bootstrapping a fresh database before the Nest app boots.
