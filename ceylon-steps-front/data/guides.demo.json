@@ -1,0 +1,431 @@
+[
+  {
+    "id": "g-001",
+    "fullName": "Kasun Madushanka Perera",
+    "displayName": "Kasun",
+    "category": "Area",
+    "regions": [
+      "Kandy",
+      "Nuwara Eliya",
+      "Ella"
+    ],
+    "languages": [
+      "English",
+      "Sinhala"
+    ],
+    "mobileNumber": "+94 77 123 4567",
+    "whatsappAvailable": true,
+    "rating": 4.9,
+    "reviews": 128,
+    "pricePerDayLkr": 12000,
+    "badge": "Verified"
+  },
+  {
+    "id": "g-002",
+    "fullName": "Nimal Shanaka Fernando",
+    "displayName": "Nimal Fernando",
+    "category": "Site",
+    "regions": [
+      "Colombo",
+      "Negombo",
+      "Gampaha"
+    ],
+    "languages": [
+      "English",
+      "Sinhala",
+      "Tamil"
+    ],
+    "mobileNumber": "+94 71 555 9012",
+    "whatsappAvailable": true,
+    "rating": 4.7,
+    "reviews": 64,
+    "pricePerDayLkr": 9500,
+    "badge": "Top Rated"
+  },
+  {
+    "id": "g-003",
+    "fullName": "Tharindu Lakshan Jayasinghe",
+    "displayName": "Tharindu Jay",
+    "category": "National",
+    "regions": [
+      "Galle",
+      "Mirissa",
+      "Hikkaduwa"
+    ],
+    "languages": [
+      "English",
+      "Sinhala"
+    ],
+    "mobileNumber": "+94 76 234 9988",
+    "whatsappAvailable": false,
+    "rating": 4.8,
+    "reviews": 92,
+    "pricePerDayLkr": 11000,
+    "badge": "Popular"
+  },
+  {
+    "id": "g-004",
+    "fullName": "Ruwan Pradeep Silva",
+    "displayName": "Ruwan Silva",
+    "category": "Chauffeur",
+    "regions": [
+      "Sigiriya",
+      "Dambulla",
+      "Polonnaruwa"
+    ],
+    "languages": [
+      "English",
+      "Sinhala"
+    ],
+    "mobileNumber": "+94 72 888 4411",
+    "whatsappAvailable": true,
+    "rating": 4.6,
+    "reviews": 51,
+    "pricePerDayLkr": 13500,
+    "badge": "Trusted"
+  },
+  {
+    "id": "g-005",
+    "fullName": "Shehani Dilrukshi Wickramasinghe",
+    "displayName": "Shehani Wick",
+    "category": "National",
+    "regions": [
+      "Anuradhapura",
+      "Kandy",
+      "Galle"
+    ],
+    "languages": [
+      "English",
+      "Sinhala",
+      "German"
+    ],
+    "mobileNumber": "+94 78 009 1100",
+    "whatsappAvailable": true,
+    "rating": 5.0,
+    "reviews": 39,
+    "pricePerDayLkr": 15000,
+    "badge": "New"
+  },
+  {
+    "id": "g-006",
+    "fullName": "Ahamed Rifzan Razeek",
+    "displayName": "Razeek Ahamed",
+    "category": "Area",
+    "regions": [
+      "Trincomalee",
+      "Pasikuda",
+      "Batticaloa"
+    ],
+    "languages": [
+      "English",
+      "Tamil",
+      "Sinhala"
+    ],
+    "mobileNumber": "+94 75 333 2222",
+    "whatsappAvailable": false,
+    "rating": 4.5,
+    "reviews": 22,
+    "pricePerDayLkr": 9000,
+    "badge": "Local"
+  },
+  {
+    "id": "g-007",
+    "fullName": "Dinuka Sandeepa Rathnayake",
+    "displayName": "Dinuka",
+    "category": "Adventure",
+    "regions": [
+      "Kitulgala",
+      "Belihuloya",
+      "Ella"
+    ],
+    "languages": [
+      "English",
+      "Sinhala"
+    ],
+    "mobileNumber": "+94 70 456 7788",
+    "whatsappAvailable": true,
+    "rating": 4.9,
+    "reviews": 73,
+    "pricePerDayLkr": 14000,
+    "badge": "Adventure Pro"
+  },
+  {
+    "id": "g-008",
+    "fullName": "Malithi Sewwandi Gunasekara",
+    "displayName": "Malithi",
+    "category": "Cultural",
+    "regions": [
+      "Kandy",
+      "Matale",
+      "Anuradhapura"
+    ],
+    "languages": [
+      "English",
+      "Sinhala",
+      "French"
+    ],
+    "mobileNumber": "+94 74 221 3344",
+    "whatsappAvailable": true,
+    "rating": 4.8,
+    "reviews": 58,
+    "pricePerDayLkr": 12500,
+    "badge": "Verified"
+  },
+  {
+    "id": "g-009",
+    "fullName": "Mohamed Fawas Niyas",
+    "displayName": "Fawas",
+    "category": "Wildlife",
+    "regions": [
+      "Yala",
+      "Udawalawe",
+      "Wilpattu"
+    ],
+    "languages": [
+      "English",
+      "Tamil"
+    ],
+    "mobileNumber": "+94 77 908 1122",
+    "whatsappAvailable": true,
+    "rating": 4.9,
+    "reviews": 145,
+    "pricePerDayLkr": 16000,
+    "badge": "Top Rated"
+  },
+  {
+    "id": "g-010",
+    "fullName": "Chathura Dilshan Ekanayake",
+    "displayName": "Chathura",
+    "category": "Hiking",
+    "regions": [
+      "Knuckles",
+      "Horton Plains",
+      "Adam's Peak"
+    ],
+    "languages": [
+      "English",
+      "Sinhala"
+    ],
+    "mobileNumber": "+94 76 667 8899",
+    "whatsappAvailable": true,
+    "rating": 4.7,
+    "reviews": 83,
+    "pricePerDayLkr": 13000,
+    "badge": "Experienced"
+  },
+  {
+    "id": "g-011",
+    "fullName": "Iresha Kaushalya Senanayake",
+    "displayName": "Iresha Sen",
+    "category": "City",
+    "regions": [
+      "Colombo",
+      "Mount Lavinia",
+      "Kalutara"
+    ],
+    "languages": [
+      "English",
+      "Sinhala",
+      "Japanese"
+    ],
+    "mobileNumber": "+94 78 445 9900",
+    "whatsappAvailable": true,
+    "rating": 4.6,
+    "reviews": 47,
+    "pricePerDayLkr": 10000,
+    "badge": "Friendly"
+  },
+  {
+    "id": "g-012",
+    "fullName": "Sachintha Vikum Peris",
+    "displayName": "Vikum",
+    "category": "National",
+    "regions": [
+      "Jaffna",
+      "Mannar",
+      "Kilinochchi"
+    ],
+    "languages": [
+      "English",
+      "Sinhala",
+      "Tamil"
+    ],
+    "mobileNumber": "+94 71 778 2233",
+    "whatsappAvailable": false,
+    "rating": 4.8,
+    "reviews": 34,
+    "pricePerDayLkr": 14500,
+    "badge": "Explorer"
+  },
+  {
+    "id": "g-013",
+    "fullName": "Pabasara Dineth Wijesinghe",
+    "displayName": "Pabasara",
+    "category": "Beach",
+    "regions": [
+      "Bentota",
+      "Unawatuna",
+      "Mirissa"
+    ],
+    "languages": [
+      "English",
+      "Sinhala"
+    ],
+    "mobileNumber": "+94 77 554 1122",
+    "whatsappAvailable": true,
+    "rating": 4.7,
+    "reviews": 61,
+    "pricePerDayLkr": 11500,
+    "badge": "Popular"
+  },
+  {
+    "id": "g-014",
+    "fullName": "Nadeesha Lakmali Karunaratne",
+    "displayName": "Nadeesha",
+    "category": "Nature",
+    "regions": [
+      "Sinharaja",
+      "Deniyaya",
+      "Rakwana"
+    ],
+    "languages": [
+      "English",
+      "Sinhala"
+    ],
+    "mobileNumber": "+94 75 882 6644",
+    "whatsappAvailable": true,
+    "rating": 4.9,
+    "reviews": 88,
+    "pricePerDayLkr": 13800,
+    "badge": "Eco Guide"
+  },
+  {
+    "id": "g-015",
+    "fullName": "Imran Shafeeq Aboobacker",
+    "displayName": "Imran",
+    "category": "City",
+    "regions": [
+      "Colombo",
+      "Negombo",
+      "Chilaw"
+    ],
+    "languages": [
+      "English",
+      "Tamil",
+      "Sinhala"
+    ],
+    "mobileNumber": "+94 72 118 9900",
+    "whatsappAvailable": true,
+    "rating": 4.5,
+    "reviews": 40,
+    "pricePerDayLkr": 9800,
+    "badge": "Trusted"
+  },
+  {
+    "id": "g-016",
+    "fullName": "Sanduni Himasha Ranasinghe",
+    "displayName": "Sanduni",
+    "category": "Cultural",
+    "regions": [
+      "Kandy",
+      "Dambulla",
+      "Polonnaruwa"
+    ],
+    "languages": [
+      "English",
+      "Sinhala",
+      "Korean"
+    ],
+    "mobileNumber": "+94 78 229 7744",
+    "whatsappAvailable": true,
+    "rating": 5.0,
+    "reviews": 53,
+    "pricePerDayLkr": 15200,
+    "badge": "Premium"
+  },
+  {
+    "id": "g-017",
+    "fullName": "Rifky Mohamed Faizal",
+    "displayName": "Rifky",
+    "category": "Wildlife",
+    "regions": [
+      "Wilpattu",
+      "Yala",
+      "Minneriya"
+    ],
+    "languages": [
+      "English",
+      "Tamil"
+    ],
+    "mobileNumber": "+94 70 991 5533",
+    "whatsappAvailable": false,
+    "rating": 4.8,
+    "reviews": 119,
+    "pricePerDayLkr": 16500,
+    "badge": "Top Rated"
+  },
+  {
+    "id": "g-018",
+    "fullName": "Udesh Chathuranga Peiris",
+    "displayName": "Udesh",
+    "category": "Adventure",
+    "regions": [
+      "Ella",
+      "Haputale",
+      "Belihuloya"
+    ],
+    "languages": [
+      "English",
+      "Sinhala"
+    ],
+    "mobileNumber": "+94 76 334 2211",
+    "whatsappAvailable": true,
+    "rating": 4.6,
+    "reviews": 46,
+    "pricePerDayLkr": 12700,
+    "badge": "Experienced"
+  },
+  {
+    "id": "g-019",
+    "fullName": "Thilini Anuththara Jayawardena",
+    "displayName": "Thilini",
+    "category": "Luxury",
+    "regions": [
+      "Bentota",
+      "Colombo",
+      "Galle"
+    ],
+    "languages": [
+      "English",
+      "Sinhala",
+      "French"
+    ],
+    "mobileNumber": "+94 71 440 7788",
+    "whatsappAvailable": true,
+    "rating": 4.9,
+    "reviews": 71,
+    "pricePerDayLkr": 18500,
+    "badge": "Elite"
+  },
+  {
+    "id": "g-020",
+    "fullName": "Kavindu Rashmika Hettiarachchi",
+    "displayName": "Kavindu",
+    "category": "Hiking",
+    "regions": [
+      "Knuckles",
+      "Riverston",
+      "Horton Plains"
+    ],
+    "languages": [
+      "English",
+      "Sinhala"
+    ],
+    "mobileNumber": "+94 77 663 8899",
+    "whatsappAvailable": true,
+    "rating": 4.7,
+    "reviews": 57,
+    "pricePerDayLkr": 13200,
+    "badge": "Mountain Guide"
+  }
+]

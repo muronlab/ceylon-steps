@@ -1,0 +1,207 @@
+[
+  {
+    "id": "bmw-3",
+    "name": "BMW 3 Series Sedan",
+    "subtitle": "The 3 Sedan",
+    "rating": 4.9,
+    "reviews": 100,
+    "location": "Jl Kendalsari V, Malang",
+    "pricePerDay": 87.44,
+    "meta": [
+      { "label": "Transmission", "value": "Automatic" },
+      { "label": "Range", "value": "250km" },
+      { "label": "Fuel", "value": "Premium" },
+      { "label": "Seats", "value": "4 Seat" }
+    ],
+    "color": "blue",
+    "brand": "BMW"
+  },
+  {
+    "id": "mb-c",
+    "name": "Mercedes-Benz C-Class",
+    "subtitle": "The C-Class",
+    "rating": 4.9,
+    "reviews": 100,
+    "location": "Malang, East Java",
+    "pricePerDay": 60.2,
+    "meta": [
+      { "label": "Transmission", "value": "Automatic" },
+      { "label": "Range", "value": "250km" },
+      { "label": "Fuel", "value": "Premium" },
+      { "label": "Seats", "value": "4 Seat" }
+    ],
+    "color": "white",
+    "brand": "Mercedes"
+  },
+  {
+    "id": "audi-q5",
+    "name": "Audi Q5 SUV",
+    "subtitle": "The Q5",
+    "rating": 4.9,
+    "reviews": 100,
+    "location": "Jl Merdeka Raya No. 21, Malang",
+    "pricePerDay": 97.82,
+    "meta": [
+      { "label": "Transmission", "value": "Automatic" },
+      { "label": "Range", "value": "250km" },
+      { "label": "Fuel", "value": "Premium" },
+      { "label": "Seats", "value": "4 Seat" }
+    ],
+    "color": "orange",
+    "brand": "Audi"
+  },
+  {
+    "id": "toyota-camry",
+    "name": "Toyota Camry Sedan",
+    "subtitle": "The Camry",
+    "rating": 4.9,
+    "reviews": 100,
+    "location": "Central Malang, East Java",
+    "pricePerDay": 120.7,
+    "meta": [
+      { "label": "Transmission", "value": "Automatic" },
+      { "label": "Range", "value": "250km" },
+      { "label": "Fuel", "value": "Premium" },
+      { "label": "Seats", "value": "4 Seat" }
+    ],
+    "color": "teal",
+    "brand": "Toyota"
+  },
+  {
+    "id": "bmw-x5",
+    "name": "BMW X5 SUV",
+    "subtitle": "The X5",
+    "rating": 4.8,
+    "reviews": 84,
+    "location": "Kandy, Sri Lanka",
+    "pricePerDay": 92.5,
+    "meta": [
+      { "label": "Transmission", "value": "Automatic" },
+      { "label": "Range", "value": "320km" },
+      { "label": "Fuel", "value": "Premium" },
+      { "label": "Seats", "value": "5 Seat" }
+    ],
+    "color": "blue",
+    "brand": "BMW"
+  },
+  {
+    "id": "bmw-5",
+    "name": "BMW 5 Series Sedan",
+    "subtitle": "The 5 Sedan",
+    "rating": 4.7,
+    "reviews": 66,
+    "location": "Colombo, Sri Lanka",
+    "pricePerDay": 78.9,
+    "meta": [
+      { "label": "Transmission", "value": "Automatic" },
+      { "label": "Range", "value": "300km" },
+      { "label": "Fuel", "value": "Premium" },
+      { "label": "Seats", "value": "4 Seat" }
+    ],
+    "color": "white",
+    "brand": "BMW"
+  },
+  {
+    "id": "mb-e",
+    "name": "Mercedes-Benz E-Class",
+    "subtitle": "The E-Class",
+    "rating": 4.8,
+    "reviews": 91,
+    "location": "Negombo, Sri Lanka",
+    "pricePerDay": 82.0,
+    "meta": [
+      { "label": "Transmission", "value": "Automatic" },
+      { "label": "Range", "value": "310km" },
+      { "label": "Fuel", "value": "Premium" },
+      { "label": "Seats", "value": "4 Seat" }
+    ],
+    "color": "orange",
+    "brand": "Mercedes"
+  },
+  {
+    "id": "mb-glc",
+    "name": "Mercedes-Benz GLC SUV",
+    "subtitle": "The GLC",
+    "rating": 4.6,
+    "reviews": 52,
+    "location": "Galle, Sri Lanka",
+    "pricePerDay": 74.3,
+    "meta": [
+      { "label": "Transmission", "value": "Automatic" },
+      { "label": "Range", "value": "290km" },
+      { "label": "Fuel", "value": "Premium" },
+      { "label": "Seats", "value": "5 Seat" }
+    ],
+    "color": "teal",
+    "brand": "Mercedes"
+  },
+  {
+    "id": "audi-a4",
+    "name": "Audi A4 Sedan",
+    "subtitle": "The A4",
+    "rating": 4.7,
+    "reviews": 73,
+    "location": "Nuwara Eliya, Sri Lanka",
+    "pricePerDay": 69.8,
+    "meta": [
+      { "label": "Transmission", "value": "Automatic" },
+      { "label": "Range", "value": "280km" },
+      { "label": "Fuel", "value": "Premium" },
+      { "label": "Seats", "value": "4 Seat" }
+    ],
+    "color": "white",
+    "brand": "Audi"
+  },
+  {
+    "id": "audi-a6",
+    "name": "Audi A6 Sedan",
+    "subtitle": "The A6",
+    "rating": 4.8,
+    "reviews": 58,
+    "location": "Ella, Sri Lanka",
+    "pricePerDay": 76.4,
+    "meta": [
+      { "label": "Transmission", "value": "Automatic" },
+      { "label": "Range", "value": "300km" },
+      { "label": "Fuel", "value": "Premium" },
+      { "label": "Seats", "value": "4 Seat" }
+    ],
+    "color": "blue",
+    "brand": "Audi"
+  },
+  {
+    "id": "toyota-corolla",
+    "name": "Toyota Corolla Sedan",
+    "subtitle": "The Corolla",
+    "rating": 4.5,
+    "reviews": 120,
+    "location": "Matara, Sri Lanka",
+    "pricePerDay": 49.9,
+    "meta": [
+      { "label": "Transmission", "value": "Automatic" },
+      { "label": "Range", "value": "260km" },
+      { "label": "Fuel", "value": "Regular" },
+      { "label": "Seats", "value": "4 Seat" }
+    ],
+    "color": "teal",
+    "brand": "Toyota"
+  },
+  {
+    "id": "toyota-prius",
+    "name": "Toyota Prius Hybrid",
+    "subtitle": "The Prius",
+    "rating": 4.6,
+    "reviews": 98,
+    "location": "Sigiriya, Sri Lanka",
+    "pricePerDay": 55.2,
+    "meta": [
+      { "label": "Transmission", "value": "Automatic" },
+      { "label": "Range", "value": "380km" },
+      { "label": "Fuel", "value": "Hybrid" },
+      { "label": "Seats", "value": "4 Seat" }
+    ],
+    "color": "white",
+    "brand": "Toyota"
+  }
+]
+
