@@ -38,6 +38,7 @@ import {
   type AdminTransportVehicle,
   type AdminDriverService,
   type AdminSafariJeep,
+  type AdminSafariItinerary,
   type AdminTypeChangeRequest,
 } from "@/lib/admin-transport-providers-api"
 import type { TransportProviderType } from "@/lib/transport-applications-api"
@@ -858,6 +859,103 @@ function SafariJeepCard({
       />
       <ChipBlock label="Included" items={jeep.inclusions} tone="positive" />
       <ChipBlock label="Not included" items={jeep.exclusions} tone="negative" />
+
+      {jeep.itineraries && jeep.itineraries.length > 0 && (
+        <div className="mt-3 grid gap-2">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Itineraries ({jeep.itineraries.length})
+          </div>
+          <div className="grid gap-2">
+            {jeep.itineraries.map((it) => (
+              <SafariItineraryRow key={it.id} itinerary={it} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function SafariItineraryRow({
+  itinerary,
+}: {
+  itinerary: AdminSafariItinerary
+}) {
+  const cover = itinerary.coverImageUrl ?? itinerary.galleryImages[0]?.imageUrl
+  const priceLabel = itinerary.price
+    ? `${formatMoney(itinerary.price, itinerary.currency ?? "LKR")} ${
+        itinerary.priceScope === "PER_PERSON"
+          ? "/ person"
+          : itinerary.priceScope === "PER_DAY"
+            ? "/ day"
+            : "/ trip"
+      }`
+    : null
+  return (
+    <div className="grid grid-cols-[56px_1fr] items-start gap-2 rounded-md border bg-zinc-50/60 p-2">
+      <div className="relative size-14 overflow-hidden rounded-md bg-zinc-100 ring-1 ring-zinc-200">
+        {cover ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={cover}
+            alt={itinerary.title}
+            className="size-full object-cover"
+          />
+        ) : (
+          <div className="grid size-full place-items-center text-[10px] text-muted-foreground">
+            No cover
+          </div>
+        )}
+      </div>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <div className="truncate text-xs font-semibold">{itinerary.title}</div>
+          {!itinerary.isActive && (
+            <Badge
+              variant="outline"
+              className="border-amber-200 bg-amber-50 text-amber-700"
+            >
+              Draft
+            </Badge>
+          )}
+          {itinerary.durationLabel && (
+            <Badge variant="outline" className="font-normal">
+              {itinerary.durationLabel}
+            </Badge>
+          )}
+          {priceLabel && (
+            <Badge variant="outline" className="font-normal">
+              {priceLabel}
+            </Badge>
+          )}
+        </div>
+        {itinerary.subtitle && (
+          <div className="mt-0.5 line-clamp-2 text-[11px] text-zinc-600">
+            {itinerary.subtitle}
+          </div>
+        )}
+        <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-muted-foreground">
+          <span>
+            {itinerary.designType === "TIME"
+              ? `${itinerary.days.length} slot${itinerary.days.length === 1 ? "" : "s"}`
+              : `${itinerary.days.length} day${itinerary.days.length === 1 ? "" : "s"}`}
+          </span>
+          <span>
+            {itinerary.galleryImages.length} photo
+            {itinerary.galleryImages.length === 1 ? "" : "s"}
+          </span>
+          <span>
+            {
+              itinerary.inclusions.filter((i) => i.kind === "INCLUDED").length
+            }{" "}
+            included ·{" "}
+            {
+              itinerary.inclusions.filter((i) => i.kind === "EXCLUDED").length
+            }{" "}
+            not included
+          </span>
+        </div>
+      </div>
     </div>
   )
 }

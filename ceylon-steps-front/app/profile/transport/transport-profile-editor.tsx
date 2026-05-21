@@ -28,6 +28,7 @@ import {
 import { FleetSection } from "./fleet-section";
 import { DriverServicesSection } from "./driver-services-section";
 import { SafariJeepsSection } from "./safari-jeeps-section";
+import { SafariItinerariesSection } from "./safari-itineraries-section";
 import { TransportTypeChangeCard } from "./transport-type-change-card";
 
 const PROVIDER_LABELS: Record<TransportProviderProfile["providerType"], string> =
@@ -304,6 +305,11 @@ export function TransportProfileEditor({
                   providerHasBusiness={profile.hasBusiness}
                   providerProfilePhotoUrl={profile.profilePhotoUrl}
                 />
+              </div>
+            )}
+            {profile.providerType === "SAFARI_JEEP" && (
+              <div className="xl:col-span-2">
+                <SafariItinerariesSection profileId={profile.id} />
               </div>
             )}
           </div>

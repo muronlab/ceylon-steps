@@ -211,6 +211,61 @@ export interface AdminSafariJeepCharge {
   sortOrder: number
 }
 
+export type AdminItineraryDesignType = "DAYS" | "TIME"
+export type AdminItineraryPriceScope = "PER_PERSON" | "PER_GROUP" | "PER_DAY"
+export type AdminItineraryInclusionKind = "INCLUDED" | "EXCLUDED"
+
+export interface AdminItineraryDay {
+  id: string
+  dayNumber: number
+  title: string
+  description: string | null
+  startTime: string | null
+  endTime: string | null
+  sortOrder: number
+}
+
+export interface AdminItineraryInclusion {
+  id: string
+  kind: AdminItineraryInclusionKind
+  text: string
+  sortOrder: number
+}
+
+export interface AdminItineraryImage {
+  id: string
+  imageUrl: string
+  caption: string | null
+  sortOrder: number
+  createdAt: string
+}
+
+export interface AdminSafariItinerary {
+  id: string
+  title: string
+  subtitle: string | null
+  designType: AdminItineraryDesignType
+  languagesOffered: string[]
+  tags: string[]
+  durationDays: number | null
+  durationLabel: string | null
+  price: string | null
+  currency: string | null
+  priceScope: AdminItineraryPriceScope
+  overview: string | null
+  transportation: string | null
+  meetingLocation: string | null
+  imageGradient: string | null
+  coverImageUrl: string | null
+  isActive: boolean
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+  days: AdminItineraryDay[]
+  inclusions: AdminItineraryInclusion[]
+  galleryImages: AdminItineraryImage[]
+}
+
 export interface AdminSafariJeep {
   id: string
   title: string
@@ -237,6 +292,7 @@ export interface AdminSafariJeep {
   updatedAt: string
   images: AdminSafariJeepImage[]
   charges: AdminSafariJeepCharge[]
+  itineraries?: AdminSafariItinerary[]
 }
 
 export interface AdminTypeChangeRequest {

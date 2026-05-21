@@ -80,6 +80,22 @@ const DETAIL_INCLUDE = {
     include: {
       images: { orderBy: { sortOrder: Prisma.SortOrder.asc } },
       charges: { orderBy: { sortOrder: Prisma.SortOrder.asc } },
+      itineraries: {
+        orderBy: [
+          { sortOrder: Prisma.SortOrder.asc },
+          { createdAt: Prisma.SortOrder.desc },
+        ],
+        include: {
+          days: {
+            orderBy: [
+              { dayNumber: Prisma.SortOrder.asc },
+              { sortOrder: Prisma.SortOrder.asc },
+            ],
+          },
+          inclusions: { orderBy: { sortOrder: Prisma.SortOrder.asc } },
+          galleryImages: { orderBy: { sortOrder: Prisma.SortOrder.asc } },
+        },
+      },
     },
   },
   typeChangeRequests: {

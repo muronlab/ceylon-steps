@@ -849,9 +849,40 @@ export class TransportProviderService {
 
   /** Snapshot a safari jeep into a fresh Itinerary. Fields the operator
    * almost always edits (days/time slots, overview text) are left blank for
-   * them to fill in. */
-  async createItineraryFromSafariJeep(userId: string, jeepId: string) {
+   * them to fill in.
+   *
+   * Optional `overrides.title` / `overrides.subtitle` come from the operator —
+   * the frontend generates template suggestions from the jeep's parks +
+   * experiences and lets the operator pick one (or type their own) before
+   * creating. When absent, we fall back to the jeep's own title and a
+   * "with <driver>" subtitle. */
+  async createItineraryFromSafariJeep(
+    userId: string,
+    jeepId: string,
+    overrides?: { title?: string; subtitle?: string | null },
+  ) {
+    // Diagnostic — remove once title/subtitle override flow is verified end-to-end.
+    // Lets us confirm in dev that the request body actually reaches the service.
+    // eslint-disable-next-line no-console
+    console.log('[createItineraryFromSafariJeep] overrides =', JSON.stringify(overrides));
+
     const jeep = await this.resolveOwnedSafariJeep(userId, jeepId);
+
+    const titleOverride = overrides?.title?.trim();
+    const titleToUse = titleOverride && titleOverride.length > 0
+      ? titleOverride
+      : jeep.title;
+
+    // `subtitle: null` is intentional (operator explicitly cleared it) so we
+    // distinguish "not provided" from "provided as null".
+    const subtitleToUse =
+      overrides && 'subtitle' in overrides
+        ? overrides.subtitle === null
+          ? null
+          : (overrides.subtitle?.trim() || null)
+        : jeep.driverName
+          ? `with ${jeep.driverName}`
+          : null;
 
     // Pick a starting price from the cheapest charge — operator can adjust.
     const cheapest = [...jeep.charges].sort(
@@ -867,11 +898,16 @@ export class TransportProviderService {
           ? 'PER_DAY'
           : 'PER_GROUP';
 
+    // Auto-generate a transportation tagline from the jeep's vehicle details,
+    // facilities, capacity and driver — the most useful 3–4 phrases joined
+    // by " · ". Operator can edit freely afterwards.
+    const transportationToUse = buildSafariTransportationTagline(jeep);
+
     const created = await this.prisma.itinerary.create({
       data: {
         safariJeepId: jeep.id,
-        title: jeep.title,
-        subtitle: jeep.driverName ? `with ${jeep.driverName}` : null,
+        title: titleToUse,
+        subtitle: subtitleToUse,
         designType: 'TIME',
         languagesOffered: jeep.driverLanguages ?? [],
         tags: ['safari'],
@@ -879,6 +915,7 @@ export class TransportProviderService {
         currency: cheapest?.currency ?? 'LKR',
         priceScope,
         overview: jeep.description ?? null,
+        transportation: transportationToUse,
         meetingLocation: jeep.pickupLocation ?? null,
         coverImageUrl: jeep.images[0]?.imageUrl ?? null,
         isActive: false, // start hidden so operator can complete it first
@@ -1525,4 +1562,73 @@ export class TransportProviderService {
       return updated;
     });
   }
+}
+
+/**
+ * Build a short transportation tagline for a new safari itinerary from the
+ * jeep's vehicle details. Joined with " · " to match the look of other
+ * itinerary fields (subtitles, inclusions). Returns null when there's
+ * literally nothing useful to say so the operator gets an empty field
+ * instead of awkward filler.
+ *
+ * Examples:
+ *   - "Open-top safari jeep · up to 6 guests · with Sunil (12 yrs exp.)"
+ *   - "Mahindra Bolero · padded raised seats · canopy roof"
+ *   - "Safari jeep with Sunil"
+ */
+function buildSafariTransportationTagline(jeep: {
+  title: string;
+  vehicleType: string;
+  passengerCapacity: number | null;
+  driverName: string;
+  driverYearsExperience: number | null;
+  facilities: string[];
+  extraFacilities: string[];
+}): string | null {
+  const parts: string[] = [];
+
+  // Lead with vehicle descriptor — prefer a facility-flavoured one if we
+  // have it ("Open-top safari jeep" reads better than just "Jeep").
+  const allFacilities = [...(jeep.facilities ?? []), ...(jeep.extraFacilities ?? [])];
+  const leadFacility = allFacilities.find((f) =>
+    /open-top|covered|canopy|raised seat/i.test(f),
+  );
+  if (leadFacility) {
+    parts.push(`${leadFacility} safari jeep`);
+  } else if (jeep.vehicleType === 'JEEP') {
+    parts.push('Safari jeep');
+  } else {
+    // Fallback for the (rare) non-JEEP safari vehicle types — title is
+    // usually descriptive enough.
+    parts.push(jeep.title);
+  }
+
+  // Other notable facilities (up to 2) — skip the one we already led with.
+  const remaining = allFacilities
+    .filter((f) => f !== leadFacility)
+    .slice(0, 2);
+  for (const f of remaining) parts.push(f.toLowerCase());
+
+  // Capacity for groups of 4+ (small groups already imply few guests).
+  if (jeep.passengerCapacity && jeep.passengerCapacity >= 4) {
+    parts.push(`up to ${jeep.passengerCapacity} guests`);
+  }
+
+  // Driver — only mention when we actually have a name; experience is a
+  // nice-to-have suffix.
+  const driver = jeep.driverName?.trim();
+  if (driver) {
+    const years = jeep.driverYearsExperience;
+    parts.push(
+      years && years > 0
+        ? `with ${driver} (${years} yr${years === 1 ? '' : 's'} exp.)`
+        : `with ${driver}`,
+    );
+  }
+
+  if (parts.length === 0) return null;
+  // Capitalise the first phrase; the rest stay lower-case (already done above)
+  // so it reads like a single sentence-fragment.
+  parts[0] = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+  return parts.join(' · ');
 }

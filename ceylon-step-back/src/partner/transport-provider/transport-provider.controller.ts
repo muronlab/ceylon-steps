@@ -30,6 +30,8 @@ import { UpdateTransportProviderProfileDto } from './dto/update-transport-provid
 import { SaveVehicleDto } from './dto/save-vehicle.dto';
 import { SaveDriverServiceDto } from './dto/save-driver-service.dto';
 import { SaveSafariJeepDto } from './dto/save-safari-jeep.dto';
+import { SaveItineraryDto } from '../../admin/dto/save-itinerary.dto';
+import { CreateSafariItineraryFromJeepDto } from './dto/create-safari-itinerary-from-jeep.dto';
 import {
   ReviewTypeChangeRequestDto,
   SubmitTypeChangeRequestDto,
@@ -317,6 +319,7 @@ export class TransportProviderController {
     summary:
       'Create a new itinerary pre-filled from a safari jeep. Some fields (days, overview) are left for the operator to complete.',
   })
+  @ApiBody({ type: CreateSafariItineraryFromJeepDto, required: false })
   @ApiCookieAuth()
   @UseGuards(SessionAuthGuard, RolesGuard)
   @Roles('TRANSPORT_PROVIDER')
@@ -324,8 +327,9 @@ export class TransportProviderController {
   async createItineraryFromSafariJeep(
     @CurrentUser() user: any,
     @Param('id') id: string,
+    @Body() body?: CreateSafariItineraryFromJeepDto,
   ) {
-    return this.service.createItineraryFromSafariJeep(user.id, id);
+    return this.service.createItineraryFromSafariJeep(user.id, id, body);
   }
 
   @ApiOperation({ summary: 'List itineraries owned by my safari jeeps' })
@@ -350,6 +354,7 @@ export class TransportProviderController {
   }
 
   @ApiOperation({ summary: 'Update a safari itinerary (full replace)' })
+  @ApiBody({ type: SaveItineraryDto })
   @ApiCookieAuth()
   @UseGuards(SessionAuthGuard, RolesGuard)
   @Roles('TRANSPORT_PROVIDER')
@@ -357,7 +362,7 @@ export class TransportProviderController {
   async updateMySafariItinerary(
     @CurrentUser() user: any,
     @Param('id') id: string,
-    @Body() body: any,
+    @Body() body: SaveItineraryDto,
   ) {
     return this.service.updateMySafariItinerary(user.id, id, body);
   }
