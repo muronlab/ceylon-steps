@@ -24,37 +24,41 @@ enum AuthProvider {
 }
 
 model User {
-  id              String         @id @default(uuid())
-  email           String         @unique
-  name            String?
-  phone           String?
-  passwordHash    String?
-  emailVerifiedAt DateTime?
+  id                   String     @id @default(uuid())
+  email                String     @unique
+  name                 String?
+  phone                String?
+  passwordHash         String?
+  emailVerifiedAt      DateTime?
   sessionInvalidBefore DateTime?
-  status          UserStatus     @default(ACTIVE)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  status               UserStatus @default(ACTIVE)
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
 
-  roles      UserRole[]
-  identities AuthIdentity[]
-  otps       OtpCode[]
-  auditLogs  AuditLog[]
+  roles              UserRole[]
+  identities         AuthIdentity[]
+  otps               OtpCode[]
+  auditLogs          AuditLog[]
+  oauthExchangeCodes OauthExchangeCode[]
 
-  createdGuideApps       GuideApplication[] @relation("GuideAppCreatedBy")
-  updatedGuideApps       GuideApplication[] @relation("GuideAppUpdatedBy")
-  statusUpdatedGuideApps GuideApplication[] @relation("GuideAppStatusUpdatedBy")
+  createdGuideApps       GuideApplication[]         @relation("GuideAppCreatedBy")
+  updatedGuideApps       GuideApplication[]         @relation("GuideAppUpdatedBy")
+  statusUpdatedGuideApps GuideApplication[]         @relation("GuideAppStatusUpdatedBy")
   statusHistoryUpdates   ApplicationStatusHistory[] @relation("AppStatusHistoryUpdatedBy")
 
-  guideProfile           GuideProfile?
+  guideProfile GuideProfile?
 
-  createdTransportApps         TransportProviderApplication[] @relation("TransportAppCreatedBy")
-  updatedTransportApps         TransportProviderApplication[] @relation("TransportAppUpdatedBy")
-  statusUpdatedTransportApps   TransportProviderApplication[] @relation("TransportAppStatusUpdatedBy")
-  transportStatusHistoryUpdates TransportApplicationStatusHistory[] @relation("TransportAppStatusHistoryUpdatedBy")
+  createdTransportApps                TransportProviderApplication[]       @relation("TransportAppCreatedBy")
+  updatedTransportApps                TransportProviderApplication[]       @relation("TransportAppUpdatedBy")
+  statusUpdatedTransportApps          TransportProviderApplication[]       @relation("TransportAppStatusUpdatedBy")
+  transportStatusHistoryUpdates       TransportApplicationStatusHistory[]  @relation("TransportAppStatusHistoryUpdatedBy")
   createdTransportTypeChangeRequests  TransportProviderTypeChangeRequest[] @relation("TransportTypeChangeCreatedBy")
   reviewedTransportTypeChangeRequests TransportProviderTypeChangeRequest[] @relation("TransportTypeChangeReviewedBy")
 
-  transportProviderProfile     TransportProviderProfile?
+  transportProviderProfile TransportProviderProfile?
+
+  conversationParticipants ConversationParticipant[]
+  sentMessages             Message[]                 @relation("MessageSender")
 
   @@index([email])
   @@map("m_users")
@@ -89,11 +93,30 @@ model AuthIdentity {
   createdAt      DateTime     @default(now())
 
   userId String
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerUserId])
   @@index([userId])
   @@map("r_auth_identities")
+}
+
+// Short-lived, single-use codes that bridge the browser-based OAuth flow to a
+// native (mobile) client. The OAuth callback issues a code and redirects to the
+// app's deep link; the app exchanges it via POST /auth/oauth/exchange for a
+// session. Only the SHA-256 hash of the code is stored — never the raw value.
+model OauthExchangeCode {
+  id         String    @id @default(uuid())
+  codeHash   String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("t_oauth_exchange_codes")
 }
 
 model OtpCode {
@@ -122,7 +145,7 @@ model AuditLog {
   createdAt DateTime @default(now())
 
   userId String?
-  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([createdAt])
@@ -172,56 +195,56 @@ model GuideApplication {
   guideLicenseFrontUrl   String?
   guideLicenseBackUrl    String?
 
-  status                 ApplicationStatus @default(PENDING)
-  remark                 String?
+  status ApplicationStatus @default(PENDING)
+  remark String?
 
-  createdBy              String?
-  updatedBy              String?
-  statusUpdatedBy        String?
-  
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  createdBy       String?
+  updatedBy       String?
+  statusUpdatedBy String?
 
-  createdByUser          User? @relation("GuideAppCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser          User? @relation("GuideAppUpdatedBy", fields: [updatedBy], references: [id])
-  statusUpdatedByUser    User? @relation("GuideAppStatusUpdatedBy", fields: [statusUpdatedBy], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  statusHistory          ApplicationStatusHistory[]
-  guideProfile           GuideProfile? @relation("GuideApplicationProfile")
+  createdByUser       User? @relation("GuideAppCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser       User? @relation("GuideAppUpdatedBy", fields: [updatedBy], references: [id])
+  statusUpdatedByUser User? @relation("GuideAppStatusUpdatedBy", fields: [statusUpdatedBy], references: [id])
+
+  statusHistory ApplicationStatusHistory[]
+  guideProfile  GuideProfile?              @relation("GuideApplicationProfile")
 
   @@map("t_guide_applications")
 }
 
 model ApplicationStatusHistory {
-  id              String            @id @default(uuid())
-  applicationId   String
-  status          ApplicationStatus
-  remark          String?
-  updatedBy       String?
-  createdAt       DateTime          @default(now())
+  id            String            @id @default(uuid())
+  applicationId String
+  status        ApplicationStatus
+  remark        String?
+  updatedBy     String?
+  createdAt     DateTime          @default(now())
 
-  application     GuideApplication  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  updatedByUser   User?             @relation("AppStatusHistoryUpdatedBy", fields: [updatedBy], references: [id])
+  application   GuideApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  updatedByUser User?            @relation("AppStatusHistoryUpdatedBy", fields: [updatedBy], references: [id])
 
   @@map("t_guide_application_status_history")
 }
 
 model GuideProfile {
-  id                     String    @id @default(uuid())
-  userId                 String    @unique
-  applicationId          String    @unique
+  id            String @id @default(uuid())
+  userId        String @unique
+  applicationId String @unique
 
   // Identity (copied from application on approval; admin/guide may refine)
-  fullName               String
-  displayName            String
-  category               String?
+  fullName    String
+  displayName String
+  category    String?
 
   // Public contact
-  email                  String
-  mobileNumber           String
-  whatsappNumber         String?
-  whatsappAvailable      Boolean   @default(false)
-  address                String
+  email             String
+  mobileNumber      String
+  whatsappNumber    String?
+  whatsappAvailable Boolean @default(false)
+  address           String
 
   // KYC (kept for audit; not displayed publicly)
   nicNumber              String
@@ -233,36 +256,36 @@ model GuideProfile {
   guideLicenseBackUrl    String?
 
   // Public marketing
-  profilePhotoUrl        String?
-  coverPhotoUrl          String?
-  bio                    String?   @db.Text
+  profilePhotoUrl    String?
+  coverPhotoUrl      String?
+  bio                String?  @db.Text
   /// One-word / short phrase about themselves, e.g. "Storyteller", "Adventurer".
   /// Shown next to the name in the public listing and on the profile header.
-  tagline                String?
+  tagline            String?
   /// Regions the guide specialises in, e.g. ["Kandy", "Sigiriya", "Galle"].
   /// Free-form array — the UI can suggest popular options.
-  regionsSpecialized     String[]  @default([])
+  regionsSpecialized String[] @default([])
 
   /// Years of experience as a guide (self-reported).
-  yearsOfExperience      Int?
+  yearsOfExperience Int?
   /// ISO 4217 currency code for prices below, e.g. "LKR", "USD".
-  currency               String?
+  currency          String?
   /// Hourly rate in `currency`. Stored as decimal(12, 2).
-  pricePerHour           Decimal?  @db.Decimal(12, 2)
+  pricePerHour      Decimal? @db.Decimal(12, 2)
   /// Daily rate in `currency`. Stored as decimal(12, 2).
-  pricePerDay            Decimal?  @db.Decimal(12, 2)
+  pricePerDay       Decimal? @db.Decimal(12, 2)
 
   /// Owner-controlled visibility flag. The guide can hide their own profile
   /// from the public listing without admin involvement.
-  isActive               Boolean   @default(true)
+  isActive     Boolean @default(true)
   /// Admin-controlled visibility flag. Cascaded from the User account status.
   /// Owners cannot toggle this — admins use it to disable a profile while
   /// keeping the guide's own preference (isActive) intact.
-  adminEnabled           Boolean   @default(true)
+  adminEnabled Boolean @default(true)
 
-  approvedAt             DateTime  @default(now())
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  approvedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   application GuideApplication @relation("GuideApplicationProfile", fields: [applicationId], references: [id])
@@ -312,51 +335,51 @@ enum ItineraryPriceScope {
 /// Safari operators can "make an itinerary" from one of their jeeps; the
 /// jeep's title, images, charges, etc. pre-fill the new itinerary.
 model Itinerary {
-  id              String   @id @default(uuid())
-  guideProfileId  String?
-  safariJeepId    String?
+  id             String  @id @default(uuid())
+  guideProfileId String?
+  safariJeepId   String?
 
-  title           String
-  subtitle        String?
+  title            String
+  subtitle         String?
   /// Multi-day tour or single-day-with-time-slots. Controls how `days` is
   /// rendered: when TIME, each day row carries `startTime`/`endTime` instead
   /// of a sequential `dayNumber`.
-  designType      ItineraryDesignType @default(DAYS)
+  designType       ItineraryDesignType @default(DAYS)
   /// Languages this itinerary is offered in. Defaults to the owner's spoken
   /// languages at creation but freely editable per-itinerary.
-  languagesOffered String[] @default([])
+  languagesOffered String[]            @default([])
   /// Free-form hashtags the owner attaches to the itinerary. Stored lowercase
   /// without the leading "#", used to power text search later.
-  tags             String[] @default([])
+  tags             String[]            @default([])
   /// Numeric duration in days (used for sorting/filtering later).
-  durationDays    Int?
+  durationDays     Int?
   /// Free-form duration label e.g. "1 day", "9 days", "Half day".
-  durationLabel   String?
+  durationLabel    String?
   /// Price in `currency`. Stored as decimal(12, 2).
-  price           Decimal? @db.Decimal(12, 2)
+  price            Decimal?            @db.Decimal(12, 2)
   /// ISO 4217 currency code (uppercase 3 letters).
-  currency        String?
+  currency         String?
   /// Whether `price` is per person, per group, or per day. Used to render
   /// "$X / person" labels on the card.
-  priceScope      ItineraryPriceScope @default(PER_PERSON)
+  priceScope       ItineraryPriceScope @default(PER_PERSON)
   /// Rich-text overview (HTML — produced by Tiptap).
-  overview        String?  @db.Text
-  transportation  String?
-  meetingLocation String?
+  overview         String?             @db.Text
+  transportation   String?
+  meetingLocation  String?
 
   /// Tailwind class name for the card gradient (preset).
-  imageGradient   String?
+  imageGradient String?
   /// Optional cover image — when set, overrides the gradient on the card.
-  coverImageUrl   String?
+  coverImageUrl String?
 
-  isActive        Boolean  @default(true)
-  sortOrder       Int      @default(0)
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  guideProfile    GuideProfile? @relation(fields: [guideProfileId], references: [id], onDelete: Cascade)
-  safariJeep      SafariJeep?   @relation(fields: [safariJeepId], references: [id], onDelete: Cascade)
+  guideProfile GuideProfile? @relation(fields: [guideProfileId], references: [id], onDelete: Cascade)
+  safariJeep   SafariJeep?   @relation(fields: [safariJeepId], references: [id], onDelete: Cascade)
 
   days          ItineraryDay[]
   inclusions    ItineraryInclusion[]
@@ -381,7 +404,7 @@ model ItineraryDay {
   endTime     String?
   sortOrder   Int     @default(0)
 
-  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  itinerary Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
 
   @@index([itineraryId])
   @@index([itineraryId, sortOrder])
@@ -389,13 +412,13 @@ model ItineraryDay {
 }
 
 model ItineraryInclusion {
-  id          String                  @id @default(uuid())
+  id          String                 @id @default(uuid())
   itineraryId String
   kind        ItineraryInclusionKind
   text        String
-  sortOrder   Int                     @default(0)
+  sortOrder   Int                    @default(0)
 
-  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  itinerary Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
 
   @@index([itineraryId])
   @@map("m_itinerary_inclusions")
@@ -409,7 +432,7 @@ model ItineraryImage {
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
 
-  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  itinerary Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
 
   @@index([itineraryId])
   @@index([itineraryId, sortOrder])
@@ -432,17 +455,17 @@ model GuideGalleryImage {
 }
 
 model TransportProviderApplication {
-  id                   String                @id @default(uuid())
-  fullName             String
-  mobileNumber         String
-  whatsappAvailable    Boolean               @default(false)
-  contactEmail         String
+  id                  String                @id @default(uuid())
+  fullName            String
+  mobileNumber        String
+  whatsappAvailable   Boolean               @default(false)
+  contactEmail        String
   /// Whether the contact email mirrors the user's account email at submit time.
-  usesAccountEmail     Boolean               @default(true)
-  providerType         TransportProviderType
-  hasBusiness          Boolean               @default(false)
-  businessName         String?
-  businessDescription  String?               @db.Text
+  usesAccountEmail    Boolean               @default(true)
+  providerType        TransportProviderType
+  hasBusiness         Boolean               @default(false)
+  businessName        String?
+  businessDescription String?               @db.Text
 
   /// KYC + license docs
   nicFrontUrl          String
@@ -452,22 +475,22 @@ model TransportProviderApplication {
   /// Government-issued safari licence — required when providerType = SAFARI_JEEP.
   safariJeepLicenseUrl String?
 
-  status               ApplicationStatus     @default(PENDING)
-  remark               String?
+  status ApplicationStatus @default(PENDING)
+  remark String?
 
-  createdBy            String?
-  updatedBy            String?
-  statusUpdatedBy      String?
+  createdBy       String?
+  updatedBy       String?
+  statusUpdatedBy String?
 
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  createdByUser        User? @relation("TransportAppCreatedBy", fields: [createdBy], references: [id])
-  updatedByUser        User? @relation("TransportAppUpdatedBy", fields: [updatedBy], references: [id])
-  statusUpdatedByUser  User? @relation("TransportAppStatusUpdatedBy", fields: [statusUpdatedBy], references: [id])
+  createdByUser       User? @relation("TransportAppCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser       User? @relation("TransportAppUpdatedBy", fields: [updatedBy], references: [id])
+  statusUpdatedByUser User? @relation("TransportAppStatusUpdatedBy", fields: [statusUpdatedBy], references: [id])
 
-  statusHistory        TransportApplicationStatusHistory[]
-  transportProfile     TransportProviderProfile? @relation("TransportApplicationProfile")
+  statusHistory    TransportApplicationStatusHistory[]
+  transportProfile TransportProviderProfile?           @relation("TransportApplicationProfile")
 
   @@map("t_transport_provider_applications")
 }
@@ -487,18 +510,18 @@ model TransportApplicationStatusHistory {
 }
 
 model TransportProviderProfile {
-  id                   String                @id @default(uuid())
-  userId               String                @unique
-  applicationId        String                @unique
+  id            String @id @default(uuid())
+  userId        String @unique
+  applicationId String @unique
 
-  fullName             String
-  mobileNumber         String
-  whatsappAvailable    Boolean               @default(false)
-  contactEmail         String
-  providerType         TransportProviderType
-  hasBusiness          Boolean               @default(false)
-  businessName         String?
-  businessDescription  String?               @db.Text
+  fullName            String
+  mobileNumber        String
+  whatsappAvailable   Boolean               @default(false)
+  contactEmail        String
+  providerType        TransportProviderType
+  hasBusiness         Boolean               @default(false)
+  businessName        String?
+  businessDescription String?               @db.Text
 
   /// KYC docs (kept for audit; not displayed publicly).
   nicFrontUrl          String
@@ -508,26 +531,26 @@ model TransportProviderProfile {
 
   /// Provider-curated display photos. Null until the provider uploads them
   /// from their profile editor — the application flow never sets these.
-  profilePhotoUrl      String?
-  coverPhotoUrl        String?
+  profilePhotoUrl String?
+  coverPhotoUrl   String?
 
   /// Owner-controlled visibility flag. The provider can hide their own
   /// profile from the public listing without admin involvement.
-  isActive             Boolean               @default(true)
+  isActive     Boolean @default(true)
   /// Admin-controlled visibility flag. Cascaded from the User account status.
   /// Owners cannot toggle this — admins use it to disable a profile while
   /// keeping the provider's own preference (isActive) intact.
-  adminEnabled         Boolean               @default(true)
+  adminEnabled Boolean @default(true)
 
-  approvedAt           DateTime              @default(now())
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
+  approvedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  user        User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  application TransportProviderApplication @relation("TransportApplicationProfile", fields: [applicationId], references: [id])
-  vehicles    TransportVehicle[]
-  driverServices DriverService[]
-  safariJeeps    SafariJeep[]
+  user               User                                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application        TransportProviderApplication         @relation("TransportApplicationProfile", fields: [applicationId], references: [id])
+  vehicles           TransportVehicle[]
+  driverServices     DriverService[]
+  safariJeeps        SafariJeep[]
   typeChangeRequests TransportProviderTypeChangeRequest[]
 
   @@index([userId])
@@ -540,15 +563,15 @@ model TransportProviderProfile {
 /// re-verification of safari licence, etc. While a PENDING request exists,
 /// the provider cannot directly edit their providerType from /profile.
 model TransportProviderTypeChangeRequest {
-  id            String                @id @default(uuid())
-  profileId     String
+  id        String @id @default(uuid())
+  profileId String
 
   /// Snapshot of the type when the request was created (audit trail).
   currentType   TransportProviderType
   requestedType TransportProviderType
 
   /// Optional reason the provider gave for the change.
-  providerNotes String?               @db.Text
+  providerNotes String? @db.Text
 
   /// Government-issued safari licence — required when requestedType is
   /// SAFARI_JEEP and the provider doesn't already have one on file.
@@ -557,19 +580,19 @@ model TransportProviderTypeChangeRequest {
   /// flip hasBusiness on (e.g. converting to a registered fleet business).
   brdDocumentUrl       String?
 
-  status        ApplicationStatus     @default(PENDING)
+  status ApplicationStatus @default(PENDING)
   /// Admin's remark when approving / rejecting (required on rejection).
-  remark        String?
+  remark String?
 
-  createdBy        String?
-  reviewedBy       String?
-  reviewedAt       DateTime?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  createdBy  String?
+  reviewedBy String?
+  reviewedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
-  profile          TransportProviderProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  createdByUser    User? @relation("TransportTypeChangeCreatedBy", fields: [createdBy], references: [id])
-  reviewedByUser   User? @relation("TransportTypeChangeReviewedBy", fields: [reviewedBy], references: [id])
+  profile        TransportProviderProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  createdByUser  User?                    @relation("TransportTypeChangeCreatedBy", fields: [createdBy], references: [id])
+  reviewedByUser User?                    @relation("TransportTypeChangeReviewedBy", fields: [reviewedBy], references: [id])
 
   @@index([profileId])
   @@index([status])
@@ -617,17 +640,17 @@ enum VehicleChargeType {
 }
 
 model TransportVehicle {
-  id              String                     @id @default(uuid())
-  profileId       String
+  id        String @id @default(uuid())
+  profileId String
 
-  title           String
-  vehicleType     VehicleType
+  title            String
+  vehicleType      VehicleType
   manufacturedYear Int?
-  fuelType        VehicleFuelType
+  fuelType         VehicleFuelType
   /// Free-form fuel consumption (e.g. "12 km/l", "18 mpg"). Stored as text so
   /// the provider can describe city/highway etc. without forcing a single unit.
-  fuelConsumption String?
-  condition       VehicleCondition           @default(GOOD)
+  fuelConsumption  String?
+  condition        VehicleCondition @default(GOOD)
 
   /// Predefined facility flags (curated list known to the UI for filtering).
   /// Free-form extras live in `extraFacilities` below.
@@ -636,25 +659,25 @@ model TransportVehicle {
   extraFacilities String[]
 
   /// What's included with this vehicle (e.g. "Bottled water", "Free WiFi").
-  inclusions      String[]
+  inclusions String[]
   /// What's NOT included (e.g. "Driver meals", "Parking fees").
-  exclusions      String[]
+  exclusions String[]
 
   /// Tiptap HTML.
-  description     String?                    @db.Text
+  description String? @db.Text
 
-  pickupLocation  String?
-  dropoffLocation String?
+  pickupLocation      String?
+  dropoffLocation     String?
   /// True when the vehicle must be returned to the pickup location.
   /// When true, `dropoffLocation` is ignored on display.
-  sameDropoffAsPickup Boolean                @default(true)
+  sameDropoffAsPickup Boolean @default(true)
   /// Provider is willing to deliver/collect at any custom location for an
   /// arrangement (typically extra fee, negotiated case-by-case).
-  allowsAnyLocation Boolean                 @default(false)
+  allowsAnyLocation   Boolean @default(false)
 
   /// Optional fuel policy ("Full to full", "Petrol included", etc.). Used as
   /// the auto-fill value for `[add fuel policy]` in the description template.
-  fuelPolicy      String?
+  fuelPolicy String?
 
   /// Vehicle registration / number plate. Provider-controlled visibility:
   /// `plateNumberVisible` toggles whether travelers see this on the public
@@ -662,14 +685,14 @@ model TransportVehicle {
   plateNumber        String?
   plateNumberVisible Boolean @default(false)
 
-  isActive        Boolean                    @default(true)
+  isActive Boolean @default(true)
 
-  createdAt       DateTime                   @default(now())
-  updatedAt       DateTime                   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  profile         TransportProviderProfile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  images          TransportVehicleImage[]
-  charges         TransportVehicleCharge[]
+  profile TransportProviderProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  images  TransportVehicleImage[]
+  charges TransportVehicleCharge[]
 
   @@index([profileId])
   @@map("m_transport_vehicles")
@@ -683,7 +706,7 @@ model TransportVehicleImage {
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
 
-  vehicle   TransportVehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicle TransportVehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
 
   @@index([vehicleId])
   @@index([vehicleId, sortOrder])
@@ -691,28 +714,28 @@ model TransportVehicleImage {
 }
 
 model TransportVehicleCharge {
-  id              String            @id @default(uuid())
-  vehicleId       String
+  id        String @id @default(uuid())
+  vehicleId String
 
-  chargeType      VehicleChargeType
-  amount          Decimal           @db.Decimal(10, 2)
-  currency        String            @default("LKR")
+  chargeType     VehicleChargeType
+  amount         Decimal           @db.Decimal(10, 2)
+  currency       String            @default("LKR")
   /// Whether the amount already includes fuel ("with petrol" vs not).
-  includesFuel    Boolean           @default(false)
+  includesFuel   Boolean           @default(false)
   /// Extra surcharge per night when the rental spans overnight (e.g. per-km
   /// pricing with a separate per-night charge for trips over 1 day).
-  nightSurcharge  Decimal?          @db.Decimal(10, 2)
+  nightSurcharge Decimal?          @db.Decimal(10, 2)
   /// Minimum units (km / days / hours) the customer must commit to.
-  minimumUnits    Int?
+  minimumUnits   Int?
   /// Optional human label ("Weekday rate", "Foreigner rate").
-  label           String?
-  notes           String?           @db.Text
+  label          String?
+  notes          String?           @db.Text
 
-  sortOrder       Int               @default(0)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  vehicle         TransportVehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicle TransportVehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
 
   @@index([vehicleId])
   @@map("m_transport_vehicle_charges")
@@ -741,32 +764,32 @@ enum DriverServicePriceUnit {
 /// "Two-day round tour"). Independent of the vehicles they own — a driver
 /// might offer the same airport pickup with any of their vehicles.
 model DriverService {
-  id              String                  @id @default(uuid())
-  profileId       String
+  id        String @id @default(uuid())
+  profileId String
 
-  title           String
-  category        DriverServiceCategory   @default(OTHER)
-  description     String?                 @db.Text
-  coverImageUrl   String?
+  title         String
+  category      DriverServiceCategory @default(OTHER)
+  description   String?               @db.Text
+  coverImageUrl String?
 
   /// Single base price for the service. Drivers usually quote one rate per
   /// service rather than a list of charge rules — keep it simple here.
-  basePrice       Decimal                 @db.Decimal(10, 2)
-  currency        String                  @default("LKR")
-  priceUnit       DriverServicePriceUnit
+  basePrice  Decimal                @db.Decimal(10, 2)
+  currency   String                 @default("LKR")
+  priceUnit  DriverServicePriceUnit
   /// Free-form notes that appear alongside the price (e.g. "min 4 hrs").
-  priceNotes      String?
+  priceNotes String?
 
   /// Reuse the same inclusion / exclusion shape as vehicles.
-  inclusions      String[]
-  exclusions      String[]
+  inclusions String[]
+  exclusions String[]
 
-  isActive        Boolean                 @default(true)
-  sortOrder       Int                     @default(0)
-  createdAt       DateTime                @default(now())
-  updatedAt       DateTime                @updatedAt
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  profile         TransportProviderProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile TransportProviderProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@index([profileId])
   @@map("m_driver_services")
@@ -785,29 +808,29 @@ enum SafariChargeType {
 /// same row (no separate driver entity) — operators can edit driver name,
 /// experience, bio, languages without managing a roster.
 model SafariJeep {
-  id              String                @id @default(uuid())
-  profileId       String
+  id        String @id @default(uuid())
+  profileId String
 
   /// Vehicle details — kept minimal. Anything that used to live on facilities
   /// or extras now goes in `inclusions` (e.g. "AC", "Roof rack").
-  title           String
-  vehicleType     VehicleType           @default(JEEP)
-  condition       VehicleCondition      @default(GOOD)
+  title             String
+  vehicleType       VehicleType      @default(JEEP)
+  condition         VehicleCondition @default(GOOD)
   passengerCapacity Int?
 
   /// Driver details (inline). Defaults to provider full name on create.
-  driverName        String
-  driverPhotoUrl    String?
+  driverName            String
+  driverPhotoUrl        String?
   driverYearsExperience Int?
-  driverBio         String?             @db.Text
-  driverLanguages   String[]
+  driverBio             String?  @db.Text
+  driverLanguages       String[]
   /// Whether the driver is also licensed to guide inside the national park.
-  driverGuidesAtParks Boolean           @default(true)
+  driverGuidesAtParks   Boolean  @default(true)
 
   /// Safari specifics
-  nationalParks   String[]
-  experiences     String[]
-  durationNotes   String?
+  nationalParks String[]
+  experiences   String[]
+  durationNotes String?
 
   /// Predefined safari facility flags (raised seats, binoculars, canopy etc.)
   /// curated for safari context. Free-form extras live in `extraFacilities`.
@@ -816,34 +839,34 @@ model SafariJeep {
 
   /// Inclusions / exclusions describe what's bundled with the trip (water,
   /// park entry, etc.) — separate from physical jeep facilities above.
-  inclusions      String[]
-  exclusions      String[]
+  inclusions String[]
+  exclusions String[]
 
   /// Tiptap HTML description.
-  description     String?               @db.Text
+  description String? @db.Text
 
-  pickupLocation  String?
-  isActive        Boolean               @default(true)
+  pickupLocation String?
+  isActive       Boolean @default(true)
 
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  profile         TransportProviderProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  images          SafariJeepImage[]
-  charges         SafariJeepCharge[]
-  itineraries     Itinerary[]
+  profile     TransportProviderProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  images      SafariJeepImage[]
+  charges     SafariJeepCharge[]
+  itineraries Itinerary[]
 
   @@index([profileId])
   @@map("m_safari_jeeps")
 }
 
 model SafariJeepImage {
-  id        String   @id @default(uuid())
+  id           String   @id @default(uuid())
   safariJeepId String
-  imageUrl  String
-  caption   String?
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
+  imageUrl     String
+  caption      String?
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
 
   safariJeep SafariJeep @relation(fields: [safariJeepId], references: [id], onDelete: Cascade)
 
@@ -853,24 +876,24 @@ model SafariJeepImage {
 }
 
 model SafariJeepCharge {
-  id            String           @id @default(uuid())
-  safariJeepId  String
+  id           String @id @default(uuid())
+  safariJeepId String
 
-  chargeType    SafariChargeType
-  amount        Decimal          @db.Decimal(10, 2)
-  currency      String           @default("LKR")
+  chargeType      SafariChargeType
+  amount          Decimal          @db.Decimal(10, 2)
+  currency        String           @default("LKR")
   /// Whether the price includes the park entrance ticket.
-  includesParkFee Boolean        @default(false)
+  includesParkFee Boolean          @default(false)
   /// Minimum units the customer must commit to (jeeps / people / hours).
-  minimumUnits  Int?
-  label         String?
-  notes         String?          @db.Text
+  minimumUnits    Int?
+  label           String?
+  notes           String?          @db.Text
 
-  sortOrder     Int              @default(0)
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  safariJeep    SafariJeep       @relation(fields: [safariJeepId], references: [id], onDelete: Cascade)
+  safariJeep SafariJeep @relation(fields: [safariJeepId], references: [id], onDelete: Cascade)
 
   @@index([safariJeepId])
   @@map("m_safari_jeep_charges")
@@ -883,4 +906,56 @@ model Session {
 
   @@index([expire], name: "IDX_session_expire")
   @@map("t_sessions")
+}
+
+// --- Chat ---------------------------------------------------------------
+// One-to-one direct messaging between two account holders. `pairKey` is the
+// two participant ids sorted and joined ("min:max") so only a single
+// conversation can ever exist per pair (enforced by the unique constraint).
+
+model Conversation {
+  id            String    @id @default(uuid())
+  pairKey       String    @unique
+  lastMessageAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@index([lastMessageAt])
+  @@map("t_conversations")
+}
+
+model ConversationParticipant {
+  id             String    @id @default(uuid())
+  conversationId String
+  userId         String
+  // High-water mark for read receipts / unread counts: the createdAt of the
+  // last message this participant has read.
+  lastReadAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@map("r_conversation_participants")
+}
+
+model Message {
+  id             String    @id @default(uuid())
+  conversationId String
+  senderId       String
+  body           String
+  createdAt      DateTime  @default(now())
+  editedAt       DateTime?
+  deletedAt      DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("t_messages")
 }

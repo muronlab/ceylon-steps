@@ -21,6 +21,7 @@ import { StorageModule } from './storage/storage.module';
 import { GuideModule } from './partner/guide/guide.module';
 import { ApplicationsModule } from './partner/applications/applications.module';
 import { TransportProviderModule } from './partner/transport-provider/transport-provider.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { TransportProviderModule } from './partner/transport-provider/transport-
     GuideModule,
     ApplicationsModule,
     TransportProviderModule,
+    ChatModule,
   ],
   controllers: [
     AppController,

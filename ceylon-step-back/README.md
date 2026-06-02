@@ -62,6 +62,7 @@ pnpm start:dev
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth (optional) |
 | `FACEBOOK_APP_ID` / `FACEBOOK_APP_SECRET` | Facebook OAuth (optional) |
 | `APPLE_*` | Apple sign-in (optional) |
+| `MOBILE_OAUTH_REDIRECT` | Deep link the OAuth callback bounces the native app to (e.g. `ceylonsteps://auth/callback`). Used for `?app=mobile` social login. |
 | `NODE_ENV` | `development` / `production` / `test` |
 
 > Never commit real secrets. Use `YOUR_*` placeholders in examples and rotate any leaked key immediately.
@@ -105,6 +106,7 @@ All routes are mounted under `/api/v1`. Top-level groups:
 | `/partner/transport-provider/*` | Transport-provider apply + profile + vehicles + safari jeeps + driver services + itineraries + type-change requests |
 | `/public/*` | Unauthenticated read-only endpoints used by the marketing site |
 | `/storage/*` | File upload endpoint (multipart, returns the stored URL) |
+| `/chat/*` | 1:1 direct messaging — conversations, message history, send, read receipts, unread count (REST). Real-time delivery is over WebSocket — see below. |
 
 ### Auth model
 
@@ -112,6 +114,45 @@ All routes are mounted under `/api/v1`. Top-level groups:
 - `SessionAuthGuard` checks the cookie; `RolesGuard` + `@Roles(...)` decorator gate by role.
 - RBAC roles: `ADMIN`, `SUPER_ADMIN`, `GUIDE`, `TRANSPORT_PROVIDER`. A user can hold multiple.
 - CSRF tokens issued via `csurf` for state-mutating requests (toggle with `CSRF_ENABLED`).
+
+### Chat (real-time 1:1 messaging)
+
+Direct messaging between **two account holders**. Identity is always the stable
+`m_users.id` (a uuid) — never email — so OAuth logins (Google/Facebook/Apple),
+where email may be absent or change, map to a single stable conversation. A
+conversation is uniquely keyed by `pairKey` (`"minUserId:maxUserId"`).
+
+**Data model** (`src/chat/`, tables `t_conversations`, `r_conversation_participants`, `t_messages`):
+per-participant `lastReadAt` drives read receipts and unread counts; messages are
+soft-deleted (`deletedAt`, body cleared). Public shapes expose only the peer's
+`id` + `name` — no email, no KYC.
+
+**REST** (all require the session cookie; `SessionAuthGuard`):
+
+| Method & path | Purpose |
+| --- | --- |
+| `POST /chat/conversations` `{ participantId }` | Get-or-create the 1:1 conversation with another user |
+| `GET /chat/conversations?limit=&cursor=` | List the user's conversations (peer, last message, unread), newest first |
+| `GET /chat/conversations/:id/messages?limit=&before=` | Message history, newest first, cursor-paged |
+| `POST /chat/conversations/:id/messages` `{ body }` | Send a message (rate-limited 30 / 10s) |
+| `POST /chat/conversations/:id/read` `{ messageId? }` | Mark read up to a message (or now) |
+| `DELETE /chat/messages/:id` | Soft-delete your own message |
+| `GET /chat/unread-count` | Total unread across all conversations |
+
+**WebSocket** (Socket.IO, namespace `/chat`, e.g. `ws://localhost:5000/chat`):
+the handshake reuses the **same cookie session** as REST (the shared session
+middleware is applied to the engine via `server.engine.use(...)` — no separate
+token). Client → server events: `conversation:join` / `conversation:leave`,
+`message:send`, `message:read`, `typing:start` / `typing:stop`, `presence:check`
+(all reply with an `{ ok, data | error }` ack). Server → client events:
+`message:new`, `message:read`, `message:deleted`, `conversation:updated`,
+`typing`, `presence`. The service persists and emits an internal event; the
+gateway broadcasts — so REST sends and socket sends behave identically.
+
+> **Authorisation policy (confirm before launch):** any authenticated, active
+> user may start a conversation with any other active user. Conversation/message
+> access is strictly participant-scoped. If chat should be gated (e.g. only after
+> a booking/enquiry), tighten `ChatService.getOrCreateConversation`.
 
 ## Architecture
 

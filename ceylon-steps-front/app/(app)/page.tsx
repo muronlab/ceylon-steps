@@ -76,15 +76,62 @@ export default function Home() {
         </div>
 
         {/* Promo row */}
-        <section className="mt-6 sm:mt-8">
-          <div className="grid gap-3 sm:gap-4 lg:grid-cols-4 lg:grid-rows-1">
+        <section className="mt-10 sm:mt-14">
+          <div className="mb-8 text-center sm:mb-12">
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">
+              Our top features
+            </span>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-950 sm:text-3xl">
+              Everything you need to explore Sri Lanka
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-500 sm:text-base">
+              Trusted local guides and reliable transport — book the essentials for your
+              trip in one place.
+            </p>
+          </div>
+          <div className="mx-auto mb-3 max-w-5xl sm:mb-4">
+            <div className="group relative flex min-h-85 flex-col justify-end overflow-hidden rounded-3xl p-7 sm:min-h-105 sm:rounded-4xl sm:p-9">
+              <Image
+                src="/wallpapers/explore.png"
+                alt=""
+                fill
+                className="object-cover transition duration-700 group-hover:scale-[1.04]"
+                sizes="(max-width: 1024px) 100vw, 1024px"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/20" />
+              <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+                <div className="max-w-xl">
+                  <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">
+                    Plan your journey
+                  </span>
+                  <h3 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl lg:text-4xl">
+                    Explore Sri Lanka, your way
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-white/80 sm:text-base">
+                    From misty hill country to golden beaches and ancient cities — discover
+                    curated experiences across the island.
+                  </p>
+                </div>
+                <Button
+                  asChild
+                  className="h-11 w-fit shrink-0 rounded-full bg-white px-6 text-zinc-950 hover:bg-white/90"
+                >
+                  <Link href="/explore" className="inline-flex items-center gap-2">
+                    Explore Sri Lanka
+                    <ArrowUpRight className="size-4" aria-hidden />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+          <div className="mx-auto grid max-w-5xl gap-3 sm:gap-4 lg:grid-cols-2 lg:grid-rows-1">
             {HOME_PROMO_CARDS.map((card) => {
               return (
                 <Link
                   key={card.title}
                   href={card.href}
                   className={[
-                    "group relative flex min-h-[200px] flex-col justify-end overflow-hidden rounded-3xl p-6 sm:min-h-[220px] sm:rounded-4xl sm:p-7",
+                    "group relative flex min-h-[300px] flex-col justify-end overflow-hidden rounded-3xl p-6 sm:min-h-[340px] sm:rounded-4xl sm:p-7",
                     card.wide ? "lg:col-span-2" : "",
                     card.variant === "image" ? "text-white" : "",
                     card.variant === "light"
@@ -105,6 +152,7 @@ export default function Home() {
                         sizes="(max-width: 1024px) 100vw, 50vw"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/10" />
+                      <div className="absolute inset-0 bg-linear-to-tl from-black/70 via-black/25 to-transparent" />
                     </>
                   ) : null}
 
@@ -116,12 +164,24 @@ export default function Home() {
                   >
                     <p
                       className={[
-                        "max-w-prose text-lg font-semibold leading-snug tracking-tight sm:text-xl",
+                        "max-w-md text-lg font-semibold leading-snug tracking-tight sm:text-xl",
                         card.variant === "image" ? "text-white" : "",
                       ].join(" ")}
                     >
                       {card.title}
                     </p>
+                    {card.desc ? (
+                      <p
+                        className={[
+                          "mt-2 ml-auto max-w-sm pr-12 text-right text-sm leading-relaxed sm:text-[0.9375rem]",
+                          card.variant === "image"
+                            ? "text-white/80"
+                            : "text-zinc-500",
+                        ].join(" ")}
+                      >
+                        {card.desc}
+                      </p>
+                    ) : null}
                     <span
                       className={[
                         "absolute bottom-0 right-0 inline-flex size-11 items-center justify-center rounded-full transition sm:size-12",

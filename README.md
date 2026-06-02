@@ -11,8 +11,9 @@ This repository is a monorepo containing the API and the two frontends that talk
 | Backend API | [`ceylon-step-back`](ceylon-step-back/) | NestJS 11 · Prisma 6 · PostgreSQL 14+ · Passport · Supabase Storage | `3000` | REST API at `/api/v1`. Auth, RBAC, applications, profiles, itineraries, file uploads, audit logging. |
 | Public site & partner area | [`ceylon-steps-front`](ceylon-steps-front/) | Next.js 16 (App Router) · React 19 · Tailwind 4 · shadcn/ui · Tiptap | `3000` (configurable) | Marketing pages + partner self-service: apply, manage profile, vehicles, safari jeeps, driver services, itineraries. |
 | Admin dashboard | [`ceylon-steps-admin`](ceylon-steps-admin/) | Next.js 16 (App Router) · React 19 · Tailwind 4 · shadcn/ui · TanStack Table | `3001` | Internal console. Reviews applications, manages users, approves transport-provider type-change requests, inspects partner data. |
+| Mobile app | [`ceylon_steps`](ceylon_steps/) | Flutter · Dio · Riverpod · go_router | n/a | Traveller mobile client. Auth (login, signup, email OTP, password reset) wired to `/api/v1/auth/*`; persists the cookie session and handles CSRF. See [`ceylon_steps/README.md`](ceylon_steps/README.md). |
 
-Both frontends are **API clients only** — they call the backend at `/api/v1/...` and hold no business logic. Cookie-based session auth means CORS + `credentials: true` is non-negotiable.
+All three clients are **API clients only** — they call the backend at `/api/v1/...` and hold no business logic. Cookie-based session auth means CORS + `credentials: true` is non-negotiable for the web frontends; the mobile app persists the session cookie and CSRF token directly.
 
 ## What it does
 

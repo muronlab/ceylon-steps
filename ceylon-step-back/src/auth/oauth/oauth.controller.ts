@@ -1,13 +1,39 @@
-import { Controller, Get, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request, Response } from 'express';
 import { OauthService } from './oauth.service';
-import { AuthProvider } from '@prisma/client';
+import { AuthProvider, Prisma } from '@prisma/client';
 import type { SessionData } from '../auth.types';
 import { SessionAuthGuard } from '../guards/session-auth.guard';
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { ConfigService } from '@nestjs/config';
+import { ExchangeOauthCodeDto } from './dto/exchange-oauth-code.dto';
+import { RateLimit } from '../../common/rate-limit/rate-limit.decorator';
+import { RateLimitGuard } from '../../common/rate-limit/rate-limit.guard';
+import {
+  AppleInitGuard,
+  FacebookInitGuard,
+  GoogleInitGuard,
+  normaliseOauthApp,
+  OauthAppTarget,
+} from './guards/oauth-init.guards';
+
+/// Shape that the Passport OAuth strategies put on `req.user` (see the
+/// `*.strategy.ts` files). Typing it here keeps the controller free of `any`.
+type OAuthUserPayload = {
+  providerUserId: string;
+  email: string | null;
+  profile?: Prisma.JsonValue;
+};
 
 @ApiTags('auth')
 @Controller('auth/oauth')
@@ -22,58 +48,111 @@ export class OauthController {
   }
 
   private getAdminUrl() {
-    return this.config.get<string>('ADMIN_FRONTEND_URL') ?? 'http://localhost:3001';
+    return (
+      this.config.get<string>('ADMIN_FRONTEND_URL') ?? 'http://localhost:3001'
+    );
   }
 
-  private resolveCallbackUrl(session: SessionData, path = '') {
-    const base = session.oauthApp === 'admin' ? this.getAdminUrl() : this.getSiteUrl();
+  private getMobileRedirect() {
+    return (
+      this.config.get<string>('MOBILE_OAUTH_REDIRECT') ??
+      'ceylonsteps://auth/callback'
+    );
+  }
+
+  /// The app target is carried through the provider round-trip in the OAuth
+  /// `state` parameter (see the init guards). passport-apple merges its form_post
+  /// body into `req.query`, so `state` is here for every provider.
+  private resolveAppTarget(req: Request): OauthAppTarget {
+    return normaliseOauthApp(req.query.state);
+  }
+
+  private webCallbackUrl(app: OauthAppTarget, path = '') {
+    const base = app === 'admin' ? this.getAdminUrl() : this.getSiteUrl();
     return `${base}${path}`;
   }
 
-  @ApiOperation({ summary: 'Start Google OAuth' })
-  @Get('google')
-  @UseGuards(AuthGuard('google'))
-  google(@Query('app') app: string | undefined, @Req() req: Request) {
-    const session = req.session as unknown as SessionData;
-    session.oauthApp = app === 'admin' ? 'admin' : 'site';
-    return;
+  /// Native (mobile) clients cannot carry a browser cookie back into the app, so
+  /// instead of opening a session here we mint a single-use code and bounce to
+  /// the app's deep link. The app exchanges the code via POST /auth/oauth/exchange.
+  private async completeMobileLogin(
+    req: Request,
+    res: Response,
+    provider: AuthProvider,
+  ) {
+    const u = req.user as OAuthUserPayload;
+
+    const user = await this.oauth.findOrCreateByProvider({
+      provider,
+      providerUserId: u.providerUserId,
+      email: u.email,
+      profile: u.profile,
+    });
+
+    const code = await this.oauth.issueExchangeCode(user.id);
+    return res.redirect(
+      `${this.getMobileRedirect()}?code=${encodeURIComponent(code)}`,
+    );
   }
 
-  @ApiOperation({ summary: 'Google OAuth callback' })
-  @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
-  async googleCallback(@Req() req: Request, @Res() res: Response) {
-    const u = req.user as any;
+  /// Shared web/admin handler: link to the current user if one is signed in,
+  /// otherwise find-or-create and open a session, then redirect to the frontend.
+  private async completeWebLogin(
+    req: Request,
+    res: Response,
+    provider: AuthProvider,
+    app: OauthAppTarget,
+  ) {
+    const u = req.user as OAuthUserPayload;
     const session = req.session as unknown as SessionData;
+
     if (session.userId) {
       await this.oauth.linkIdentity({
         userId: session.userId,
-        provider: AuthProvider.GOOGLE,
+        provider,
         providerUserId: u.providerUserId,
         profile: u.profile,
       });
-      const target = this.resolveCallbackUrl(session, '/dashboard');
-      session.oauthApp = undefined;
-      return res.redirect(target);
+      return res.redirect(this.webCallbackUrl(app, '/dashboard'));
     }
 
     const user = await this.oauth.findOrCreateByProvider({
-      provider: AuthProvider.GOOGLE,
+      provider,
       providerUserId: u.providerUserId,
       email: u.email,
       profile: u.profile,
     });
 
     session.userId = user.id;
-    (session as any).loginAt = new Date().toISOString();
-    const target = this.resolveCallbackUrl(session);
-    session.oauthApp = undefined;
-    return res.redirect(target);
+    session.loginAt = new Date().toISOString();
+    return res.redirect(this.webCallbackUrl(app));
+  }
+
+  private handleCallback(req: Request, res: Response, provider: AuthProvider) {
+    const app = this.resolveAppTarget(req);
+    return app === 'mobile'
+      ? this.completeMobileLogin(req, res, provider)
+      : this.completeWebLogin(req, res, provider, app);
+  }
+
+  @ApiOperation({ summary: 'Start Google OAuth' })
+  @Get('google')
+  @UseGuards(GoogleInitGuard)
+  google() {
+    // The guard redirects to the provider; this body never runs.
+    return;
+  }
+
+  @ApiOperation({ summary: 'Google OAuth callback' })
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  googleCallback(@Req() req: Request, @Res() res: Response) {
+    return this.handleCallback(req, res, AuthProvider.GOOGLE);
   }
 
   @ApiOperation({ summary: 'Start Facebook OAuth' })
   @Get('facebook')
-  @UseGuards(AuthGuard('facebook'))
+  @UseGuards(FacebookInitGuard)
   facebook() {
     return;
   }
@@ -81,34 +160,13 @@ export class OauthController {
   @ApiOperation({ summary: 'Facebook OAuth callback' })
   @Get('facebook/callback')
   @UseGuards(AuthGuard('facebook'))
-  async facebookCallback(@Req() req: Request, @Res() res: Response) {
-    const u = req.user as any;
-    const session = req.session as unknown as SessionData;
-    if (session.userId) {
-      await this.oauth.linkIdentity({
-        userId: session.userId,
-        provider: AuthProvider.FACEBOOK,
-        providerUserId: u.providerUserId,
-        profile: u.profile,
-      });
-      return res.redirect(`${this.getSiteUrl()}/dashboard`);
-    }
-
-    const user = await this.oauth.findOrCreateByProvider({
-      provider: AuthProvider.FACEBOOK,
-      providerUserId: u.providerUserId,
-      email: u.email,
-      profile: u.profile,
-    });
-
-    session.userId = user.id;
-    (session as any).loginAt = new Date().toISOString();
-    return res.redirect(this.getSiteUrl());
+  facebookCallback(@Req() req: Request, @Res() res: Response) {
+    return this.handleCallback(req, res, AuthProvider.FACEBOOK);
   }
 
   @ApiOperation({ summary: 'Start Apple OAuth' })
   @Get('apple')
-  @UseGuards(AuthGuard('apple'))
+  @UseGuards(AppleInitGuard)
   apple() {
     return;
   }
@@ -116,37 +174,44 @@ export class OauthController {
   @ApiOperation({ summary: 'Apple OAuth callback (POST)' })
   @Post('apple/callback')
   @UseGuards(AuthGuard('apple'))
-  async appleCallback(@Req() req: Request, @Res() res: Response) {
-    const u = req.user as any;
-    const session = req.session as unknown as SessionData;
-    if (session.userId) {
-      await this.oauth.linkIdentity({
-        userId: session.userId,
-        provider: AuthProvider.APPLE,
-        providerUserId: u.providerUserId,
-        profile: u.profile,
-      });
-      return res.redirect(`${this.getSiteUrl()}/dashboard`);
-    }
+  appleCallback(@Req() req: Request, @Res() res: Response) {
+    return this.handleCallback(req, res, AuthProvider.APPLE);
+  }
 
-    const user = await this.oauth.findOrCreateByProvider({
-      provider: AuthProvider.APPLE,
-      providerUserId: u.providerUserId,
-      email: u.email,
-      profile: u.profile,
+  @ApiOperation({
+    summary: 'Exchange a native OAuth one-time code for a session',
+  })
+  @RateLimit({
+    keyPrefix: 'auth:oauth-exchange',
+    points: 15,
+    durationSeconds: 60,
+  })
+  @UseGuards(RateLimitGuard)
+  @Post('exchange')
+  async exchange(@Body() dto: ExchangeOauthCodeDto, @Req() req: Request) {
+    const user = await this.oauth.consumeExchangeCode({
+      code: dto.code,
+      ip: req.ip ?? null,
+      userAgent: req.headers['user-agent'] ?? null,
     });
 
+    const session = req.session as unknown as SessionData;
     session.userId = user.id;
-    (session as any).loginAt = new Date().toISOString();
-    return res.redirect(this.getSiteUrl());
+    session.loginAt = new Date().toISOString();
+
+    return {
+      id: user.id,
+      email: user.email,
+      emailVerifiedAt: user.emailVerifiedAt,
+    };
   }
 
   @ApiOperation({ summary: 'Link Google identity to current user' })
   @ApiCookieAuth()
   @Get('google/link')
   @UseGuards(SessionAuthGuard, AuthGuard('google'))
-  async linkGoogle(@Req() req: Request, @CurrentUser() user: any) {
-    const u = req.user as any;
+  async linkGoogle(@Req() req: Request, @CurrentUser() user: { id: string }) {
+    const u = req.user as OAuthUserPayload;
     await this.oauth.linkIdentity({
       userId: user.id,
       provider: AuthProvider.GOOGLE,
@@ -160,8 +225,8 @@ export class OauthController {
   @ApiCookieAuth()
   @Get('facebook/link')
   @UseGuards(SessionAuthGuard, AuthGuard('facebook'))
-  async linkFacebook(@Req() req: Request, @CurrentUser() user: any) {
-    const u = req.user as any;
+  async linkFacebook(@Req() req: Request, @CurrentUser() user: { id: string }) {
+    const u = req.user as OAuthUserPayload;
     await this.oauth.linkIdentity({
       userId: user.id,
       provider: AuthProvider.FACEBOOK,
@@ -175,8 +240,8 @@ export class OauthController {
   @ApiCookieAuth()
   @Get('apple/link')
   @UseGuards(SessionAuthGuard, AuthGuard('apple'))
-  async linkApple(@Req() req: Request, @CurrentUser() user: any) {
-    const u = req.user as any;
+  async linkApple(@Req() req: Request, @CurrentUser() user: { id: string }) {
+    const u = req.user as OAuthUserPayload;
     await this.oauth.linkIdentity({
       userId: user.id,
       provider: AuthProvider.APPLE,
@@ -186,4 +251,3 @@ export class OauthController {
     return { ok: true };
   }
 }
-

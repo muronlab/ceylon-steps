@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react"
+import type { LucideIcon } from "lucide-react";
 import {
   Building2,
   Car,
@@ -6,18 +6,18 @@ import {
   ShieldCheck,
   Sparkles,
   UsersRound,
-} from "lucide-react"
+} from "lucide-react";
 
-export const HOME_WALLPAPER_IMAGE = "/wallpapers/3.jpg"
+export const HOME_WALLPAPER_IMAGE = "/wallpapers/3.jpg";
 
-export const HOME_DARK_FEATURE_IMAGE = "/wallpapers/2.jpg"
+export const HOME_DARK_FEATURE_IMAGE = "/wallpapers/2.jpg";
 
 export type HomeServiceItem = {
-  title: string
-  desc: string
-  href: string
-  icon: LucideIcon
-}
+  title: string;
+  desc: string;
+  href: string;
+  icon: LucideIcon;
+};
 
 export const HOME_SERVICES: HomeServiceItem[] = [
   {
@@ -56,40 +56,38 @@ export const HOME_SERVICES: HomeServiceItem[] = [
     icon: Sparkles,
     href: "/activities",
   },
-]
+];
 
 export const HOME_STATS = [
   { value: "10M+", label: "Total Customers" },
   { value: "09+", label: "Years Of Experience" },
   { value: "12K", label: "Total Destinations" },
   { value: "5.0", label: "Average Rating" },
-] as const
+] as const;
 
 export type HomePromoCard = {
-  variant: "image" | "light" | "dark"
-  title: string
-  href: string
-  image?: string
+  variant: "image" | "light" | "dark";
+  title: string;
+  desc?: string;
+  href: string;
+  image?: string;
   /** spans two columns on large screens */
-  wide?: boolean
-}
+  wide?: boolean;
+};
 
 export const HOME_PROMO_CARDS: HomePromoCard[] = [
   {
     variant: "image",
-    wide: true,
-    title: "Reliable and affordable options at your fingertips",
-    href: "/explore",
-    image: "/transport/vehicle-with-guide.jpg",
-  },
-  {
-    variant: "light",
     title: "Local guides who know every corner of the island",
+    desc: "Verified local experts for safaris, hikes, cultural sites and hidden gems across Sri Lanka.",
     href: "/guides",
+    image: "/wallpapers/guide.png",
   },
   {
-    variant: "dark",
-    title: "Vehicles, airport pickups, insurance & activities",
+    variant: "image",
+    title: "Vehicles, airport pickups and transport options for every traveler",
+    desc: "From airport transfers to self-drive and chauffeur hire — book reliable rides island-wide.",
     href: "/transport",
+    image: "/wallpapers/transport.png",
   },
-]
+];
