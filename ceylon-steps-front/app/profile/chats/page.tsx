@@ -42,9 +42,9 @@ export default function ChatsPage() {
   const hasSelection = selectedId !== null
 
   return (
-    <div className="-mx-4 -mb-4 grid h-[calc(100vh-4rem)] flex-1 grid-cols-1 overflow-hidden border-t border-zinc-200 bg-white text-zinc-900 md:grid-cols-[360px_1fr]">
+    <div className="-m-4 grid h-[calc(100svh-3.5rem)] grid-cols-1 overflow-hidden border-t border-zinc-200 bg-zinc-50 text-zinc-900 md:grid-cols-[380px_1fr]">
       {/* Chat list — visible on md+, hidden on mobile/tablet when a chat is open */}
-      <div className={cn("min-h-0", hasSelection ? "hidden md:block" : "block")}>
+      <div className={cn("min-h-0 overflow-hidden", hasSelection ? "hidden md:block" : "block")}>
         <ChatList
           chats={CHATS.map((c) => c.summary)}
           selectedId={selectedId}
@@ -53,7 +53,7 @@ export default function ChatsPage() {
       </div>
 
       {/* Thread / empty — on mobile only renders when a chat is open */}
-      <div className={cn("min-h-0", hasSelection ? "block" : "hidden md:block")}>
+      <div className={cn("min-h-0 overflow-hidden", hasSelection ? "block" : "hidden md:block")}>
         {active ? (
           <ChatThread thread={active} onBack={() => setSelectedId(null)} />
         ) : (

@@ -19,6 +19,12 @@ import {
     SidebarMenuSubButton,
     SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
+import { cn } from "@/lib/utils"
+
+// Selected item: blue-500 text + icon (icon inherits currentColor) on a blue-50
+// background. `!` beats the base `data-active:` attribute-selector styles.
+const activeClasses =
+    "bg-blue-50! text-blue-500! hover:bg-blue-50! hover:text-blue-500!"
 
 export function NavMain({
     items,
@@ -46,7 +52,7 @@ export function NavMain({
                         const active = pathname === item.url || pathname.startsWith(`${item.url}/`)
                         return (
                             <SidebarMenuItem key={item.title}>
-                                <SidebarMenuButton asChild tooltip={item.title} isActive={active}>
+                                <SidebarMenuButton asChild tooltip={item.title} isActive={active} className={cn(active && activeClasses)}>
                                     <Link href={item.url}>
                                         {item.icon && <item.icon />}
                                         <span>{item.title}</span>
@@ -69,7 +75,7 @@ export function NavMain({
                         >
                             <SidebarMenuItem>
                                 <CollapsibleTrigger asChild>
-                                    <SidebarMenuButton tooltip={item.title} isActive={anyActive}>
+                                    <SidebarMenuButton tooltip={item.title} isActive={anyActive} className={cn(anyActive && activeClasses)}>
                                         {item.icon && <item.icon />}
                                         <span>{item.title}</span>
                                         <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -83,7 +89,7 @@ export function NavMain({
                                                 pathname.startsWith(`${subItem.url}/`)
                                             return (
                                                 <SidebarMenuSubItem key={subItem.title}>
-                                                    <SidebarMenuSubButton asChild isActive={active}>
+                                                    <SidebarMenuSubButton asChild isActive={active} className={cn(active && "text-blue-500! [&>svg]:text-blue-500!")}>
                                                         <Link href={subItem.url}>
                                                             <span>{subItem.title}</span>
                                                         </Link>

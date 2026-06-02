@@ -15,15 +15,9 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { ChatSummary, Tick } from "./mock-data"
+import { avatarGradient, getInitials } from "./avatar-colour"
 
 type Tab = "all" | "unread"
-
-function getInitials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  const a = parts[0]?.[0] ?? "?"
-  const b = parts.length > 1 ? parts[parts.length - 1]?.[0] : ""
-  return (a + b).toUpperCase()
-}
 
 function formatStamp(iso: string) {
   const d = new Date(iso)
@@ -49,10 +43,10 @@ function formatStamp(iso: string) {
 
 function PreviewIcon({ kind }: { kind: ChatSummary["previewKind"] }) {
   if (!kind || kind === "text") return null
-  if (kind === "image") return <ImageIcon className="size-3.5 text-zinc-400" />
-  if (kind === "video") return <Video className="size-3.5 text-zinc-400" />
-  if (kind === "document") return <FileText className="size-3.5 text-zinc-400" />
-  if (kind === "voice") return <MicVocal className="size-3.5 text-zinc-400" />
+  if (kind === "image") return <ImageIcon className="size-3.5 shrink-0 text-zinc-400" />
+  if (kind === "video") return <Video className="size-3.5 shrink-0 text-zinc-400" />
+  if (kind === "document") return <FileText className="size-3.5 shrink-0 text-zinc-400" />
+  if (kind === "voice") return <MicVocal className="size-3.5 shrink-0 text-zinc-400" />
   return null
 }
 
@@ -89,12 +83,17 @@ export function ChatList({
   const unreadCount = chats.reduce((acc, c) => acc + (c.unreadCount > 0 ? 1 : 0), 0)
 
   return (
-    <aside className="flex h-full flex-col border-r border-zinc-200 bg-white">
+    <aside className="flex h-full flex-col border-r border-zinc-200/70 bg-white/80 backdrop-blur-xl">
       {/* Header */}
       <div className="flex items-center justify-between gap-2 px-5 pt-5">
-        <div className="text-base font-semibold tracking-tight text-zinc-950">Messages</div>
-        <div className="flex items-center gap-1">
-          <IconButton aria-label="New chat" title="New chat">
+        <div>
+          <div className="text-lg font-bold tracking-tight text-zinc-950">Messages</div>
+          <div className="mt-0.5 text-[0.7rem] font-medium text-zinc-400">
+            {unreadCount > 0 ? `${unreadCount} unread` : "All caught up"}
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <IconButton aria-label="New chat" title="New chat" tone="accent">
             <Plus className="size-4" />
           </IconButton>
           <IconButton aria-label="More" title="More">
@@ -104,14 +103,14 @@ export function ChatList({
       </div>
 
       {/* Search */}
-      <div className="px-4 pt-3">
-        <div className="flex items-center gap-2 rounded-2xl bg-zinc-100 px-3 py-2.5">
-          <Search className="size-4 text-zinc-500" />
+      <div className="px-4 pt-4">
+        <div className="flex items-center gap-2 rounded-2xl bg-zinc-100/80 px-3.5 py-2.5 ring-1 ring-transparent transition focus-within:bg-white focus-within:ring-blue-500/40 focus-within:shadow-sm">
+          <Search className="size-4 shrink-0 text-zinc-500" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search messages"
-            className="w-full bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-500"
+            className="w-full bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400"
           />
         </div>
       </div>
@@ -127,52 +126,70 @@ export function ChatList({
         />
       </div>
 
-      {/* Chat list */}
-      <div className="flex-1 overflow-y-auto px-2 pb-3">
+      {/* Chat list — the only scrollable region; header/search/tabs stay fixed */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
         {filtered.length === 0 ? (
           <div className="px-4 py-10 text-center text-xs text-zinc-500">
             No chats match this filter.
           </div>
         ) : (
-          <ul className="flex flex-col gap-1">
+          <ul className="flex flex-col gap-0.5">
             {filtered.map((c) => {
               const selected = selectedId === c.id
+              const unread = c.unreadCount > 0
               return (
                 <li key={c.id}>
                   <button
                     type="button"
                     onClick={() => onSelect(c.id)}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition",
-                      selected ? "bg-zinc-100" : "hover:bg-zinc-50",
+                      "group relative flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition",
+                      selected
+                        ? "bg-blue-50 ring-1 ring-blue-100"
+                        : "hover:bg-zinc-50",
                     )}
                   >
+                    {/* Active accent rail */}
+                    <span
+                      className={cn(
+                        "absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-blue-500 transition-opacity",
+                        selected ? "opacity-100" : "opacity-0",
+                      )}
+                    />
                     <Avatar name={c.name} avatarUrl={c.avatarUrl} online={c.online} />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline justify-between gap-2">
-                        <div className="truncate text-[0.9rem] font-semibold text-zinc-950">
+                        <div
+                          className={cn(
+                            "truncate text-[0.9rem] text-zinc-950",
+                            unread ? "font-bold" : "font-semibold",
+                          )}
+                        >
                           {c.name}
                         </div>
                         <div
                           className={cn(
                             "shrink-0 text-[0.7rem]",
-                            c.unreadCount > 0
-                              ? "font-semibold text-blue-500"
-                              : "text-zinc-400",
+                            unread ? "font-semibold text-blue-500" : "text-zinc-400",
                           )}
                         >
                           {formatStamp(c.lastAt)}
                         </div>
                       </div>
                       <div className="mt-0.5 flex items-center justify-between gap-2">
-                        <div className="flex min-w-0 items-center gap-1.5 text-xs text-zinc-500">
+                        <div
+                          className={cn(
+                            "flex min-w-0 items-center gap-1.5 text-xs",
+                            unread ? "text-zinc-700" : "text-zinc-500",
+                          )}
+                        >
                           <PreviewIcon kind={c.previewKind} />
                           <span className="truncate">{c.preview}</span>
                         </div>
                         <div className="flex shrink-0 items-center gap-1.5">
                           {c.muted && <BellOff className="size-3.5 text-zinc-400" />}
-                          {c.unreadCount > 0 ? (
-                            <span className="grid min-w-[20px] place-items-center rounded-full bg-blue-500 px-1.5 py-0.5 text-[0.65rem] font-semibold text-white">
+                          {unread ? (
+                            <span className="grid min-w-5 place-items-center rounded-full bg-blue-500 px-1.5 py-0.5 text-[0.65rem] font-semibold text-white shadow-sm shadow-blue-500/30">
                               {c.unreadCount}
                             </span>
                           ) : (
@@ -208,10 +225,10 @@ function Tab({
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition",
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition",
         active
-          ? "bg-blue-500 text-white"
-          : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200/70",
+          ? "bg-blue-500 text-white shadow-sm shadow-blue-500/30"
+          : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70",
       )}
     >
       {label}
@@ -231,13 +248,19 @@ function Tab({
 
 function IconButton({
   children,
+  tone = "muted",
   ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { tone?: "muted" | "accent" }) {
   return (
     <button
       type="button"
       {...props}
-      className="grid size-9 place-items-center rounded-full text-zinc-600 hover:bg-zinc-100"
+      className={cn(
+        "grid size-9 place-items-center rounded-full transition",
+        tone === "accent"
+          ? "bg-blue-500 text-white shadow-sm shadow-blue-500/30 hover:bg-blue-600"
+          : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700",
+      )}
     >
       {children}
     </button>
@@ -260,10 +283,15 @@ function Avatar({
         <img
           src={avatarUrl}
           alt={name}
-          className="size-11 rounded-full object-cover ring-1 ring-zinc-200/70"
+          className="size-11 rounded-full object-cover ring-2 ring-white shadow-sm"
         />
       ) : (
-        <div className="grid size-11 place-items-center rounded-full bg-gradient-to-br from-zinc-200 to-zinc-300 text-xs font-semibold text-zinc-700 ring-1 ring-zinc-200/70">
+        <div
+          className={cn(
+            "grid size-11 place-items-center rounded-full bg-linear-to-br text-sm font-bold text-white shadow-sm ring-2 ring-white",
+            avatarGradient(name),
+          )}
+        >
           {getInitials(name)}
         </div>
       )}

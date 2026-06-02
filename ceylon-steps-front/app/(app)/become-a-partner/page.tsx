@@ -275,6 +275,115 @@ function TransportApplicationStatus({
   )
 }
 
+function ActivityApplicationStatus({
+  appStatus,
+}: {
+  appStatus: { status: string; remark?: string | null }
+}) {
+  const status = appStatus.status as "PENDING" | "APPROVED" | "REJECTED"
+
+  const config = {
+    PENDING: {
+      tone: "amber",
+      title: "Your activity application is under review",
+      message:
+        "We received your application. We'll get back to you by email once the review is complete.",
+      cta: "View application",
+      icon: AlertCircle,
+    },
+    APPROVED: {
+      tone: "emerald",
+      title: "You're a verified activity partner",
+      message: "Your activity application has been approved.",
+      cta: "View application",
+      icon: CheckCircle2,
+    },
+    REJECTED: {
+      tone: "red",
+      title: "Your activity application was rejected",
+      message: appStatus.remark
+        ? `Reason: ${appStatus.remark}. You can update the details and resubmit.`
+        : "Please update your details and resubmit your application.",
+      cta: "Update and resubmit",
+      icon: AlertCircle,
+    },
+  } as const
+
+  const c = config[status]
+  const Icon = c.icon
+
+  const toneClasses = {
+    amber: {
+      bg: "bg-amber-50",
+      ring: "ring-amber-200",
+      iconBg: "bg-amber-100",
+      iconText: "text-amber-600",
+      titleText: "text-amber-900",
+      text: "text-amber-800",
+    },
+    emerald: {
+      bg: "bg-emerald-50",
+      ring: "ring-emerald-200",
+      iconBg: "bg-emerald-100",
+      iconText: "text-emerald-600",
+      titleText: "text-emerald-900",
+      text: "text-emerald-800",
+    },
+    red: {
+      bg: "bg-red-50",
+      ring: "ring-red-200",
+      iconBg: "bg-red-100",
+      iconText: "text-red-600",
+      titleText: "text-red-900",
+      text: "text-red-800",
+    },
+  }[c.tone]
+
+  return (
+    <div
+      className={cn(
+        "mt-4 rounded-3xl p-5 ring-1 sm:p-6",
+        toneClasses.bg,
+        toneClasses.ring,
+      )}
+    >
+      <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-4">
+          <div
+            className={cn(
+              "grid size-12 shrink-0 place-items-center rounded-full",
+              toneClasses.iconBg,
+              toneClasses.iconText,
+            )}
+          >
+            <Icon className="size-6" />
+          </div>
+          <div>
+            <div className={cn("text-base font-semibold", toneClasses.titleText)}>
+              {c.title}
+            </div>
+            <p className={cn("mt-1 text-sm leading-6", toneClasses.text)}>
+              {c.message}
+            </p>
+          </div>
+        </div>
+        <Button
+          asChild
+          className="h-11 shrink-0 rounded-full bg-zinc-950 px-6 text-sm font-semibold text-white hover:bg-zinc-900"
+        >
+          <Link
+            href="/partner/activity-provider"
+            className="inline-flex items-center gap-2"
+          >
+            {c.cta}
+            <ArrowUpRight className="size-4" aria-hidden />
+          </Link>
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 export default function BecomeAPartnerPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
@@ -287,19 +396,23 @@ export default function BecomeAPartnerPage() {
 
   const [appStatus, setAppStatus] = useState<any>(null)
   const [transportStatus, setTransportStatus] = useState<any>(null)
+  const [activityStatus, setActivityStatus] = useState<any>(null)
   const [loadingStatus, setLoadingStatus] = useState(true)
 
   useEffect(() => {
     async function checkApp() {
       if (!user) return
       try {
-        const [guideRes, transportRes] = await Promise.allSettled([
+        const [guideRes, transportRes, activityRes] = await Promise.allSettled([
           apiClient.get("/partner/guide/me"),
           apiClient.get("/partner/transport-provider/me"),
+          apiClient.get("/partner/activity-provider/me"),
         ])
         if (guideRes.status === "fulfilled") setAppStatus(guideRes.value.data)
         if (transportRes.status === "fulfilled")
           setTransportStatus(transportRes.value.data)
+        if (activityRes.status === "fulfilled")
+          setActivityStatus(activityRes.value.data)
       } catch (err) {
         console.error("Failed to fetch application statuses", err)
       } finally {
@@ -324,6 +437,8 @@ export default function BecomeAPartnerPage() {
   const isPendingGuide = appStatus?.status === "PENDING"
   const isApprovedTransport = transportStatus?.status === "APPROVED"
   const isPendingTransport = transportStatus?.status === "PENDING"
+  const isApprovedActivity = activityStatus?.status === "APPROVED"
+  const isPendingActivity = activityStatus?.status === "PENDING"
 
   return (
     <div className="min-h-dvh w-full overflow-x-hidden bg-[radial-gradient(1100px_circle_at_15%_10%,rgba(59,130,246,0.16),transparent_45%),radial-gradient(900px_circle_at_85%_20%,rgba(99,102,241,0.12),transparent_40%),linear-gradient(to_bottom,white,rgba(244,244,245,0.9))] p-4 sm:p-6">
@@ -476,11 +591,24 @@ export default function BecomeAPartnerPage() {
                 disabled={isApprovedTransport || isPendingTransport}
               />
               <PartnerCard
-                title="Activity Provider"
-                description="Balloon rides, pottery, village tours, surfing, rafting and more."
+                title={
+                  isApprovedActivity
+                    ? "Already an Activity Partner"
+                    : isPendingActivity
+                      ? "Application Pending"
+                      : "Activity Provider"
+                }
+                description={
+                  isApprovedActivity
+                    ? "You are already a verified activity partner."
+                    : isPendingActivity
+                      ? "Your application is currently under review."
+                      : "Balloon rides, pottery, village tours, surfing, rafting and more."
+                }
                 href="/partner/activity-provider"
                 icon={Sparkles}
                 tone="dark"
+                disabled={isApprovedActivity || isPendingActivity}
               />
               <PartnerCard
                 title="Tourism Agency"
@@ -496,6 +624,10 @@ export default function BecomeAPartnerPage() {
 
             {transportStatus && (transportStatus.status === "PENDING" || transportStatus.status === "APPROVED" || transportStatus.status === "REJECTED") && (
               <TransportApplicationStatus appStatus={transportStatus} />
+            )}
+
+            {activityStatus && (activityStatus.status === "PENDING" || activityStatus.status === "APPROVED" || activityStatus.status === "REJECTED") && (
+              <ActivityApplicationStatus appStatus={activityStatus} />
             )}
 
             <div className="mt-8 rounded-3xl bg-white/70 p-5 ring-1 ring-zinc-200/70">

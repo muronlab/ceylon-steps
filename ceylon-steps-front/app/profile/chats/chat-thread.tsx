@@ -10,13 +10,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { ChatMessage, ChatThread as ThreadType } from "./mock-data"
-
-function getInitials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  const a = parts[0]?.[0] ?? "?"
-  const b = parts.length > 1 ? parts[parts.length - 1]?.[0] : ""
-  return (a + b).toUpperCase()
-}
+import { avatarGradient, getInitials } from "./avatar-colour"
 
 function dayKey(iso: string) {
   const d = new Date(iso)
@@ -110,15 +104,15 @@ export function ChatThread({
 
   return (
     <div className="flex h-full flex-col bg-white">
-      {/* Header — name + presence + more (no calls / no search) */}
-      <header className="flex items-center justify-between gap-3 border-b border-zinc-200/70 bg-white px-5 py-3">
+      {/* Header — glassy, name + presence + more */}
+      <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-zinc-200/70 bg-white/80 px-5 py-3 backdrop-blur-xl">
         <div className="flex min-w-0 items-center gap-3">
           {onBack && (
             <button
               type="button"
               onClick={onBack}
               aria-label="Back to chats"
-              className="grid size-9 place-items-center rounded-full text-zinc-600 hover:bg-zinc-100 md:hidden"
+              className="grid size-9 place-items-center rounded-full text-zinc-600 transition hover:bg-zinc-100 md:hidden"
             >
               <ArrowLeft className="size-4" />
             </button>
@@ -129,7 +123,10 @@ export function ChatThread({
               {summary.name}
             </div>
             {summary.presence && (
-              <div className="truncate text-[0.7rem] text-zinc-500">
+              <div className="flex items-center gap-1.5 truncate text-[0.7rem] text-zinc-500">
+                {summary.online && (
+                  <span className="size-1.5 rounded-full bg-emerald-500" />
+                )}
                 {summary.presence}
               </div>
             )}
@@ -139,18 +136,21 @@ export function ChatThread({
           type="button"
           aria-label="More"
           title="More"
-          className="grid size-9 place-items-center rounded-full text-zinc-600 hover:bg-zinc-100"
+          className="grid size-9 place-items-center rounded-full text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-700"
         >
           <MoreVertical className="size-4" />
         </button>
       </header>
 
-      {/* Messages */}
-      <div ref={scrollerRef} className="flex-1 overflow-y-auto bg-white">
-        <div className="mx-auto flex max-w-3xl flex-col gap-3 px-5 py-5 sm:px-8">
+      {/* Messages — the only scrollable region; header + composer stay fixed */}
+      <div
+        ref={scrollerRef}
+        className="min-h-0 flex-1 overflow-y-auto bg-zinc-50/70 bg-[radial-gradient(circle_at_1px_1px,rgba(24,24,27,0.045)_1px,transparent_0)] [background-size:22px_22px]"
+      >
+        <div className="mx-auto flex max-w-3xl flex-col gap-4 px-5 py-6 sm:px-8">
           {grouped.map((g) => (
-            <div key={g.key} className="flex flex-col gap-2">
-              <div className="mx-auto rounded-full bg-zinc-100 px-3 py-1 text-[0.65rem] font-semibold text-zinc-600">
+            <div key={g.key} className="flex flex-col gap-2.5">
+              <div className="sticky top-2 z-[1] mx-auto rounded-full bg-white/80 px-3 py-1 text-[0.65rem] font-semibold text-zinc-500 shadow-sm ring-1 ring-zinc-200/70 backdrop-blur">
                 {g.label}
               </div>
               {g.items.map((m, i) => {
@@ -172,14 +172,14 @@ export function ChatThread({
       </div>
 
       {/* Composer */}
-      <footer className="border-t border-zinc-200/70 bg-white px-5 py-3">
+      <footer className="border-t border-zinc-200/70 bg-white/80 px-5 py-3 backdrop-blur-xl">
         <div className="flex items-center gap-2">
-          <div className="flex flex-1 items-center gap-2 rounded-full bg-zinc-100 px-3 py-2">
+          <div className="flex flex-1 items-center gap-2 rounded-full bg-zinc-100/80 px-3 py-2 ring-1 ring-transparent transition focus-within:bg-white focus-within:shadow-sm focus-within:ring-blue-500/30">
             <button
               type="button"
               aria-label="Attach file"
               title="Attach"
-              className="grid size-7 place-items-center rounded-full text-zinc-600 hover:bg-zinc-200"
+              className="grid size-7 place-items-center rounded-full text-zinc-500 transition hover:bg-zinc-200 hover:text-zinc-700"
             >
               <Paperclip className="size-4" />
             </button>
@@ -193,13 +193,13 @@ export function ChatThread({
                 }
               }}
               placeholder="Your message"
-              className="flex-1 bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-500"
+              className="flex-1 bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400"
             />
             <button
               type="button"
               aria-label="Voice message"
               title="Voice message"
-              className="grid size-7 place-items-center rounded-full text-zinc-600 hover:bg-zinc-200"
+              className="grid size-7 place-items-center rounded-full text-zinc-500 transition hover:bg-zinc-200 hover:text-zinc-700"
             >
               <Mic className="size-4" />
             </button>
@@ -209,7 +209,7 @@ export function ChatThread({
             onClick={send}
             disabled={!draft.trim()}
             aria-label="Send"
-            className="grid size-11 place-items-center rounded-2xl bg-blue-500 text-white shadow-sm transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="grid size-11 place-items-center rounded-2xl bg-linear-to-br from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/30 transition hover:scale-105 hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:from-zinc-300 disabled:to-zinc-300 disabled:shadow-none disabled:hover:scale-100"
           >
             <Send className="size-4" />
           </button>
@@ -246,10 +246,10 @@ function Bubble({
       >
         <div
           className={cn(
-            "rounded-2xl px-3.5 py-2.5 text-sm shadow-sm",
+            "px-3.5 py-2.5 text-sm shadow-sm",
             mine
-              ? "rounded-br-md bg-blue-500 text-white"
-              : "rounded-bl-md bg-zinc-100 text-zinc-900",
+              ? "rounded-2xl rounded-br-md bg-linear-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/20"
+              : "rounded-2xl rounded-bl-md bg-white text-zinc-900 ring-1 ring-zinc-200/70",
           )}
         >
           {/* File attachment */}
@@ -257,7 +257,7 @@ function Bubble({
             <div
               className={cn(
                 "mb-1.5 flex items-center gap-2.5 rounded-xl px-2.5 py-2",
-                mine ? "bg-white/15" : "bg-white",
+                mine ? "bg-white/15" : "bg-zinc-50",
               )}
             >
               <div
@@ -307,7 +307,7 @@ function Bubble({
               rel="noreferrer"
               className={cn(
                 "-mx-1 -mt-1 mb-2 block overflow-hidden rounded-xl ring-1",
-                mine ? "bg-white/10 ring-white/15" : "bg-white ring-zinc-200",
+                mine ? "bg-white/10 ring-white/15" : "bg-zinc-50 ring-zinc-200",
               )}
             >
               {message.link.thumbUrl && (
@@ -344,18 +344,13 @@ function Bubble({
           )}
         </div>
 
-        <div
-          className={cn(
-            "px-1 text-[0.65rem]",
-            mine ? "text-zinc-400" : "text-zinc-400",
-          )}
-        >
+        <div className="px-1 text-[0.65rem] text-zinc-400">
           {timeOnly(message.at)}
         </div>
       </div>
 
       {mine && (
-        <div className="w-8 shrink-0">{!stacked ? <SmallAvatar name="You" /> : null}</div>
+        <div className="w-8 shrink-0">{!stacked ? <SmallAvatar name="You" mine /> : null}</div>
       )}
     </div>
   )
@@ -368,7 +363,12 @@ function minutesBetween(a: string, b: string) {
 function ThreadAvatar({ name, online }: { name: string; online?: boolean }) {
   return (
     <div className="relative">
-      <div className="grid size-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-zinc-200 to-zinc-300 text-[11px] font-semibold text-zinc-700 ring-1 ring-zinc-200/70">
+      <div
+        className={cn(
+          "grid size-10 shrink-0 place-items-center rounded-full bg-linear-to-br text-[11px] font-bold text-white shadow-sm ring-2 ring-white",
+          avatarGradient(name),
+        )}
+      >
         {getInitials(name)}
       </div>
       {online && (
@@ -378,9 +378,14 @@ function ThreadAvatar({ name, online }: { name: string; online?: boolean }) {
   )
 }
 
-function SmallAvatar({ name }: { name: string }) {
+function SmallAvatar({ name, mine }: { name: string; mine?: boolean }) {
   return (
-    <div className="grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-zinc-200 to-zinc-300 text-[10px] font-semibold text-zinc-700 ring-1 ring-zinc-200/70">
+    <div
+      className={cn(
+        "grid size-8 shrink-0 place-items-center rounded-full bg-linear-to-br text-[10px] font-bold text-white shadow-sm ring-2 ring-white",
+        mine ? "from-zinc-700 to-zinc-900" : avatarGradient(name),
+      )}
+    >
       {getInitials(name)}
     </div>
   )

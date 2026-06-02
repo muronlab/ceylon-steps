@@ -34,11 +34,14 @@ export function usePendingCounts(): PendingApplicationCounts | null {
         const changedGuides = prev === null || prev.guides !== next.guides
         const changedTransport =
           prev === null || prev.transport !== next.transport
+        const changedActivity =
+          prev === null || prev.activity !== next.activity
 
         // First load is not treated as a "change" for refetch purposes —
         // the list pages already do their own initial fetch on mount.
         const hasRealChange =
-          prev !== null && (changedGuides || changedTransport)
+          prev !== null &&
+          (changedGuides || changedTransport || changedActivity)
 
         lastRef.current = next
         setCounts(next)
@@ -50,6 +53,7 @@ export function usePendingCounts(): PendingApplicationCounts | null {
             changed: {
               guides: changedGuides,
               transport: changedTransport,
+              activity: changedActivity,
             },
           }
           window.dispatchEvent(

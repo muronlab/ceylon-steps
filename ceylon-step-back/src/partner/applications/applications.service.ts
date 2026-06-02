@@ -127,6 +127,59 @@ export class ApplicationsService {
   }
 
   /**
+   * Paginated activity-provider application list. Same filter/search shape as
+   * the guide/transport lists, used by the admin dashboard.
+   */
+  async findActivityApplications(query: {
+    status?: ApplicationStatus;
+    search?: string;
+    take?: number;
+    skip?: number;
+  }) {
+    const where: Prisma.ActivityProviderApplicationWhereInput = {};
+    if (query.status) where.status = query.status;
+    if (query.search) {
+      const term = query.search.trim();
+      if (term) {
+        where.OR = [
+          { fullName: { contains: term, mode: 'insensitive' } },
+          { contactEmail: { contains: term, mode: 'insensitive' } },
+          { mobileNumber: { contains: term, mode: 'insensitive' } },
+          { businessName: { contains: term, mode: 'insensitive' } },
+          { natureOfBusiness: { contains: term, mode: 'insensitive' } },
+        ];
+      }
+    }
+
+    const take = Math.min(Math.max(query.take ?? 20, 1), 100);
+    const skip = Math.max(query.skip ?? 0, 0);
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.activityProviderApplication.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          createdByUser: { select: { id: true, email: true, name: true } },
+          statusUpdatedByUser: { select: { id: true, email: true, name: true } },
+        },
+        take,
+        skip,
+      }),
+      this.prisma.activityProviderApplication.count({ where }),
+    ]);
+
+    return {
+      total,
+      take,
+      skip,
+      items: items.map((a) => ({
+        ...a,
+        partnerType: 'ACTIVITY_PROVIDER' as const,
+      })),
+    };
+  }
+
+  /**
    * Get the full status history for a specific guide application.
    * Extend with a partnerType param when more types are added.
    */
@@ -153,13 +206,16 @@ export class ApplicationsService {
    * admin sidebar to show "needs review" badges and poll every minute.
    */
   async getPendingCounts() {
-    const [guides, transport] = await this.prisma.$transaction([
+    const [guides, transport, activity] = await this.prisma.$transaction([
       this.prisma.guideApplication.count({ where: { status: 'PENDING' } }),
       this.prisma.transportProviderApplication.count({
         where: { status: 'PENDING' },
       }),
+      this.prisma.activityProviderApplication.count({
+        where: { status: 'PENDING' },
+      }),
     ]);
-    return { guides, transport };
+    return { guides, transport, activity };
   }
 
   /**

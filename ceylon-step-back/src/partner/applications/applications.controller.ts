@@ -61,6 +61,26 @@ export class ApplicationsController {
   }
 
 
+  @ApiOperation({ summary: 'Paginated activity-provider applications (Admin only)' })
+  @ApiQuery({ name: 'status', required: false, enum: ApplicationStatus })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'take', required: false })
+  @ApiQuery({ name: 'skip', required: false })
+  @Get('activity-providers')
+  async listActivityApplications(
+    @Query('status') status?: ApplicationStatus,
+    @Query('search') search?: string,
+    @Query('take') take?: string,
+    @Query('skip') skip?: string,
+  ) {
+    return this.applicationsService.findActivityApplications({
+      status,
+      search,
+      take: take ? Number(take) : undefined,
+      skip: skip ? Number(skip) : undefined,
+    });
+  }
+
   @ApiOperation({ summary: 'Get status summary counts grouped by status (Admin only)' })
   @Get('summary')
   async getStatusSummary() {

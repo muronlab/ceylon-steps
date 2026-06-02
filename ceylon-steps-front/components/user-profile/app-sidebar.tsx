@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Compass, MessageCircle, SquareTerminal, type LucideIcon } from "lucide-react";
+import { Car, Compass, MessageCircle, Sparkles, User, type LucideIcon } from "lucide-react";
 
 import {
   Sidebar,
@@ -29,30 +29,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const roles = Array.isArray(user?.roles) ? user!.roles! : [];
   const isGuide = roles.includes("GUIDE");
   const isTransportProvider = roles.includes("TRANSPORT_PROVIDER");
+  const isActivityProvider = roles.includes("ACTIVITY_PROVIDER");
 
-  const profileItems: { title: string; url: string }[] = [];
+  // Each profile is its own top-level route — no nested sub-routes.
+  const navItems: NavItem[] = [];
   if (isGuide) {
-    profileItems.push({ title: "Guide profile", url: "/profile/guide" });
+    navItems.push({ title: "Guide profile", url: "/profile/guide", icon: Compass });
   }
   if (isTransportProvider) {
-    profileItems.push({ title: "Transport profile", url: "/profile/transport" });
+    navItems.push({ title: "Transport profile", url: "/profile/transport", icon: Car });
+  }
+  if (isActivityProvider) {
+    navItems.push({
+      title: "Activity provider profile",
+      url: "/profile/activity",
+      icon: Sparkles,
+    });
   }
 
-  const navItems: NavItem[] = [];
-  if (profileItems.length > 0) {
-    navItems.push({
-      title: "User profile",
-      url: "#",
-      icon: SquareTerminal,
-      isActive: true,
-      items: profileItems,
-    });
-  } else {
-    navItems.push({
-      title: "Account",
-      url: "/profile",
-      icon: Compass,
-    });
+  if (navItems.length === 0) {
+    navItems.push({ title: "Account", url: "/profile", icon: User });
   }
 
   if (isGuide || isTransportProvider) {
@@ -67,7 +63,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-4">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-950 text-white shadow-lg shadow-zinc-950/20">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-500 text-white shadow-lg shadow-blue-500/20">
             <span className="text-xs font-black tracking-tighter">CS</span>
           </div>
           {!isCollapsed && (
@@ -75,7 +71,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <span className="text-sm font-bold tracking-tight text-zinc-950 whitespace-nowrap">
                 CEYLON STEPS
               </span>
-              <span className="text-[10px] font-medium text-zinc-400 whitespace-nowrap">
+              <span className="text-[10px] font-medium text-blue-500 whitespace-nowrap">
                 Partner Dashboard
               </span>
             </div>

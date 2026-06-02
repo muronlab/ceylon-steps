@@ -3,6 +3,7 @@ import apiClient from "./api-client"
 export type PendingApplicationCounts = {
   guides: number
   transport: number
+  activity: number
 }
 
 export async function getPendingApplicationCounts(): Promise<PendingApplicationCounts> {
@@ -23,5 +24,5 @@ export type PendingCountsChangedDetail = {
   previous: PendingApplicationCounts | null
   current: PendingApplicationCounts
   /** Which buckets actually changed since the last poll. */
-  changed: { guides: boolean; transport: boolean }
+  changed: { guides: boolean; transport: boolean; activity: boolean }
 }

@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Building2,
   Car,
+  Compass,
   Plane,
   ShieldCheck,
   Sparkles,
@@ -22,37 +23,37 @@ export type HomeServiceItem = {
 export const HOME_SERVICES: HomeServiceItem[] = [
   {
     title: "Find Guides",
-    desc: "Local experts for every region",
+    desc: "Verified local experts for every region — from wildlife safaris and hill-country treks to cultural and heritage tours across the island.",
     icon: UsersRound,
     href: "/guides",
   },
   {
     title: "Hire / Rent Vehicle",
-    desc: "With driver or self‑drive",
+    desc: "Choose chauffeur-driven comfort or self-drive freedom. Cars, vans, bikes and tuk-tuks for every budget and route.",
     icon: Car,
     href: "/vehicles",
   },
   {
     title: "Find an Agency",
-    desc: "Trusted Sri Lanka travel agencies",
+    desc: "Browse trusted Sri Lankan travel agencies offering full itineraries, multi-day packages and on-the-ground support.",
     icon: Building2,
     href: "/agencies",
   },
   {
     title: "Airport Pickups",
-    desc: "Fast & safe transfers",
+    desc: "Fast, safe transfers to and from the airport — booked in advance with on-time drivers, 24 hours a day.",
     icon: Plane,
     href: "/airport-pickups",
   },
   {
     title: "Tourist Insurance",
-    desc: "Travel with confidence",
+    desc: "Travel with confidence under cover for medical care, trip changes and the unexpected, tailored for visitors to Sri Lanka.",
     icon: ShieldCheck,
     href: "/insurance",
   },
   {
     title: "Activities",
-    desc: "Surf, abseil, balloon rides",
+    desc: "Surf, abseil, balloon rides and more — book unforgettable experiences and adventures right across the island.",
     icon: Sparkles,
     href: "/activities",
   },
@@ -66,28 +67,60 @@ export const HOME_STATS = [
 ] as const;
 
 export type HomePromoCard = {
-  variant: "image" | "light" | "dark";
+  /** Short category label shown above the title. */
+  tag: string;
   title: string;
-  desc?: string;
+  desc: string;
   href: string;
-  image?: string;
-  /** spans two columns on large screens */
-  wide?: boolean;
+  /** Lead icon for the card. */
+  icon: LucideIcon;
+  /** Short context line shown in the footer (e.g. coverage area). */
+  meta: string;
+  /** Average rating, displayed beside a star. */
+  rating: string;
+  /** Call-to-action label on the card button. */
+  cta: string;
 };
 
 export const HOME_PROMO_CARDS: HomePromoCard[] = [
   {
-    variant: "image",
-    title: "Local guides who know every corner of the island",
-    desc: "Verified local experts for safaris, hikes, cultural sites and hidden gems across Sri Lanka.",
-    href: "/guides",
-    image: "/wallpapers/guide.png",
+    tag: "Curated trips",
+    title: "Explore Sri Lanka, your way",
+    desc: "From misty hill country to golden beaches and ancient cities — discover curated experiences across the island.",
+    href: "/explore",
+    icon: Compass,
+    meta: "Island-wide",
+    rating: "4.9",
+    cta: "Explore",
   },
   {
-    variant: "image",
-    title: "Vehicles, airport pickups and transport options for every traveler",
+    tag: "Local guides",
+    title: "Guides who know every corner of the island",
+    desc: "Verified local experts for safaris, hikes, cultural sites and hidden gems across Sri Lanka.",
+    href: "/guides",
+    icon: UsersRound,
+    meta: "All regions",
+    rating: "4.8",
+    cta: "Find guides",
+  },
+  {
+    tag: "Transport",
+    title: "Vehicles, airport pickups and transfers",
     desc: "From airport transfers to self-drive and chauffeur hire — book reliable rides island-wide.",
     href: "/transport",
-    image: "/wallpapers/transport.png",
+    icon: Car,
+    meta: "24/7 service",
+    rating: "4.9",
+    cta: "Book transport",
+  },
+  {
+    tag: "Activities",
+    title: "Surf, abseil, balloon rides and more",
+    desc: "Book unforgettable experiences and adventures right across the island — from coastlines to hill country.",
+    href: "/activities",
+    icon: Sparkles,
+    meta: "Island-wide",
+    rating: "4.9",
+    cta: "Explore activities",
   },
 ];

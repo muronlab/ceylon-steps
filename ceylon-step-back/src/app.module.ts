@@ -13,6 +13,8 @@ import { AdminGuidesController } from './admin/guides.controller';
 import { GuidesService } from './admin/guides.service';
 import { AdminTransportProvidersController } from './admin/transport-providers.controller';
 import { TransportProvidersService } from './admin/transport-providers.service';
+import { AdminActivityProvidersController } from './admin/activity-providers.controller';
+import { ActivityProvidersService } from './admin/activity-providers.service';
 import { PublicGuidesController } from './public/public-guides.controller';
 import { PublicGuidesService } from './public/public-guides.service';
 import { RolesGuard } from './rbac/roles.guard';
@@ -21,6 +23,7 @@ import { StorageModule } from './storage/storage.module';
 import { GuideModule } from './partner/guide/guide.module';
 import { ApplicationsModule } from './partner/applications/applications.module';
 import { TransportProviderModule } from './partner/transport-provider/transport-provider.module';
+import { ActivityProviderModule } from './partner/activity-provider/activity-provider.module';
 import { ChatModule } from './chat/chat.module';
 
 @Module({
@@ -37,6 +40,7 @@ import { ChatModule } from './chat/chat.module';
     GuideModule,
     ApplicationsModule,
     TransportProviderModule,
+    ActivityProviderModule,
     ChatModule,
   ],
   controllers: [
@@ -45,6 +49,7 @@ import { ChatModule } from './chat/chat.module';
     AdminController,
     AdminGuidesController,
     AdminTransportProvidersController,
+    AdminActivityProvidersController,
     PublicGuidesController,
   ],
   providers: [
@@ -53,6 +58,7 @@ import { ChatModule } from './chat/chat.module';
     UsersService,
     GuidesService,
     TransportProvidersService,
+    ActivityProvidersService,
     PublicGuidesService,
   ],
 })

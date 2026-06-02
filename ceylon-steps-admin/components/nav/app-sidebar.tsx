@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Car, Compass, Users } from "lucide-react";
+import { Car, Compass, Sparkles, Users } from "lucide-react";
 
 import {
   Sidebar,
@@ -47,6 +47,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           name: "Type Change Requests",
           url: "/transport/type-change-requests",
         },
+      ],
+    },
+    {
+      name: "Manage Activities",
+      icon: Sparkles,
+      children: [
+        {
+          name: "Activity Applications",
+          url: "/activity/applications",
+          badge: counts?.activity,
+        },
+        { name: "Activity Providers", url: "/activity" },
       ],
     },
   ];

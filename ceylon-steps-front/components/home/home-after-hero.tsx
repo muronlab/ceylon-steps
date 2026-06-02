@@ -7,10 +7,10 @@ import Link from "next/link"
 import AnimatedTestimonialsDemo from "@/components/animated-testimonials-demo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Reveal } from "@/components/ui/reveal"
 import {
   Car,
   CarTaxiFront,
-  ArrowRight,
   ArrowUpRight,
   ChevronLeft,
   ChevronRight,
@@ -38,9 +38,9 @@ function SectionShell({
 }) {
   return (
     <section className="w-full px-0 sm:px-8 xl:px-20">
-      <div className="rounded-4xl bg-white p-6 shadow-[0_18px_60px_-30px_rgba(0,0,0,0.18)] ring-1 ring-zinc-200/70 sm:p-8 lg:p-10 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700">
+      <Reveal className="rounded-4xl bg-white p-6 shadow-[0_18px_60px_-30px_rgba(0,0,0,0.18)] ring-1 ring-zinc-200/70 sm:p-8 lg:p-10">
         {children}
-      </div>
+      </Reveal>
     </section>
   )
 }
@@ -53,27 +53,31 @@ function AboutSriLankaSection() {
       title: "National Guides",
       desc: "Authorized to accompany groups exceeding 7 passengers, facilitating travel across the entire island.",
       icon: ShieldCheck,
+      accent: "bg-violet-100 text-violet-600",
     },
     {
       title: "Chauffeur Guides",
       desc: "Licensed to guide groups up to 7 passengers, offering comprehensive islandwide coverage (while driving).",
       icon: Car,
+      accent: "bg-rose-100 text-rose-500",
     },
     {
       title: "Area Guides",
       desc: "Restricted to guiding visitors within a specific province.",
       icon: MapPinned,
+      accent: "bg-teal-100 text-teal-600",
     },
     {
       title: "Site Guides",
       desc: "Specialized in providing services at designated sites only.",
       icon: Landmark,
+      accent: "bg-sky-100 text-sky-600",
     },
   ] as const
 
   return (
     <section className="w-full px-0 sm:px-8 xl:px-20" id="about">
-      <div className="rounded-4xl bg-white p-6 shadow-[0_18px_60px_-30px_rgba(0,0,0,0.18)] ring-1 ring-zinc-200/70 sm:p-8 lg:p-12 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700">
+      <Reveal className="rounded-4xl bg-white p-6 shadow-[0_18px_60px_-30px_rgba(0,0,0,0.18)] ring-1 ring-zinc-200/70 sm:p-8 lg:p-12">
         <p className="mx-auto max-w-4xl text-center text-2xl font-semibold leading-tight tracking-tight text-zinc-950 sm:text-3xl lg:text-[2.1rem] lg:leading-snug">
           Join us as we share stories, routes, and experiences across Sri Lanka — from
           misty tea country to golden coasts, ancient cities, and wildlife you will not
@@ -129,62 +133,31 @@ function AboutSriLankaSection() {
                 >
                   {showGuideDetails ? "Hide details" : "Show details"}
                 </button>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-700">
-                  {guideTypes.map((g, idx) => {
-                    const isDark = idx === 0 || idx === 3
-                    return (
-                      <Link
-                        key={g.title}
-                        href="/guides"
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  {guideTypes.map((g, idx) => (
+                    <Reveal key={g.title} delay={idx * 0.08} className="h-full">
+                    <Link
+                      href="/guides"
+                      className="group relative flex h-full flex-col rounded-3xl bg-white p-5 shadow-[0_16px_50px_-40px_rgba(0,0,0,0.35)] ring-1 ring-zinc-100 transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-38px_rgba(0,0,0,0.4)]"
+                      aria-label={`Explore ${g.title}`}
+                    >
+                      <span
                         className={[
-                          "group relative rounded-2xl p-4 shadow-sm ring-1 transition sm:p-5",
-                          "hover:-translate-y-0.5 hover:shadow-md",
-                          isDark
-                            ? "bg-zinc-950 text-white ring-zinc-800"
-                            : "bg-white/80 text-zinc-950 ring-zinc-200/70",
+                          "grid size-12 place-items-center rounded-2xl transition group-hover:scale-105",
+                          g.accent,
                         ].join(" ")}
-                        aria-label={`Explore ${g.title}`}
                       >
-                        <div className="flex items-start gap-3 pr-10">
-                          <div
-                            className={[
-                              "grid size-10 shrink-0 place-items-center rounded-full ring-1 sm:size-11",
-                              isDark
-                                ? "bg-white/10 ring-white/15"
-                                : "bg-white ring-zinc-200/70",
-                            ].join(" ")}
-                          >
-                            <g.icon
-                              className={["size-5", isDark ? "text-white/85" : "text-zinc-900/80"].join(" ")}
-                            />
-                          </div>
-                          <div className="min-w-0">
-                            <div className={["text-sm font-semibold leading-6 sm:text-base", isDark ? "text-white" : "text-zinc-950"].join(" ")}>
-                              {g.title}
-                            </div>
-                            <div
-                              className={[
-                                "mt-1 text-xs leading-5 sm:text-sm sm:leading-6 lg:text-xs lg:leading-5",
-                                isDark ? "text-white/70" : "text-zinc-600",
-                              ].join(" ")}
-                            >
-                              {g.desc}
-                            </div>
-                          </div>
-                        </div>
-
-                        <span
-                          className={[
-                            "absolute right-4 top-4 grid size-9 place-items-center rounded-full shadow-sm ring-1 transition group-hover:scale-[1.02] sm:right-5 sm:top-5",
-                            "bg-white text-zinc-950 ring-black/10",
-                          ].join(" ")}
-                          aria-hidden
-                        >
-                          <ArrowUpRight className="size-4" />
-                        </span>
-                      </Link>
-                    )
-                  })}
+                        <g.icon className="size-5.5" aria-hidden />
+                      </span>
+                      <div className="mt-4 text-sm font-semibold leading-6 text-zinc-950 sm:text-base">
+                        {g.title}
+                      </div>
+                      <div className="mt-1 text-xs leading-5 text-zinc-500 sm:text-sm sm:leading-6 lg:text-xs lg:leading-5">
+                        {g.desc}
+                      </div>
+                    </Link>
+                    </Reveal>
+                  ))}
                 </div>
               </div>
             </div>
@@ -208,7 +181,7 @@ function AboutSriLankaSection() {
             <Link href="/guides">View all guides who can help you</Link>
           </Button>
         </div>
-      </div>
+      </Reveal>
     </section>
   )
 }
@@ -216,7 +189,7 @@ function AboutSriLankaSection() {
 function HighlightsSection() {
   return (
     <section className="w-full px-0 sm:px-8 xl:px-20">
-      <div className="rounded-4xl bg-white p-6 shadow-[0_18px_60px_-30px_rgba(0,0,0,0.18)] ring-1 ring-zinc-200/70 sm:p-8 lg:p-10 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700">
+      <Reveal className="rounded-4xl bg-white p-6 shadow-[0_18px_60px_-30px_rgba(0,0,0,0.18)] ring-1 ring-zinc-200/70 sm:p-8 lg:p-10">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
           <div className="min-w-0 text-center sm:max-w-3xl sm:text-left">
             <p className={kEyebrow}>Transport</p>
@@ -242,7 +215,7 @@ function HighlightsSection() {
           </div>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-700">
+        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
           {[
             {
               title: "Hire with guide driver",
@@ -276,11 +249,11 @@ function HighlightsSection() {
               icon: TentTree,
               tag: "Adventure",
             },
-          ].map((t) => (
+          ].map((t, idx) => (
+            <Reveal key={t.title} delay={idx * 0.08} className="h-full">
             <Link
-              key={t.title}
               href={t.href}
-              className="group relative overflow-hidden rounded-4xl bg-white ring-1 ring-zinc-200/80 shadow-[0_16px_50px_-40px_rgba(0,0,0,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_26px_75px_-55px_rgba(0,0,0,0.45)]"
+              className="group relative flex h-full flex-col overflow-hidden rounded-4xl bg-white ring-1 ring-zinc-200/80 shadow-[0_16px_50px_-40px_rgba(0,0,0,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_26px_75px_-55px_rgba(0,0,0,0.45)]"
             >
               <div className="relative h-[220px] w-full sm:h-[240px] lg:h-[260px]">
                 <Image
@@ -316,9 +289,10 @@ function HighlightsSection() {
                 </div>
               </div>
             </Link>
+            </Reveal>
           ))}
         </div>
-      </div>
+      </Reveal>
     </section>
   )
 }
@@ -419,11 +393,12 @@ function ActivitiesEventsSection() {
           </div>
 
           <div className="mx-auto mt-4 w-full max-w-none sm:mt-5 2xl:max-w-[1600px]">
-            <div className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-6 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-700">
-              {cards.map((c) => (
-                <div
+            <div className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+              {cards.map((c, idx) => (
+                <Reveal
                   key={c.image}
-                  className="overflow-hidden rounded-3xl border-[5px] border-white/95 bg-white/95 shadow-[0_16px_50px_-38px_rgba(0,0,0,0.55)] sm:border-[7px] motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-700"
+                  delay={(idx % 3) * 0.08}
+                  className="overflow-hidden rounded-3xl border-[5px] border-white/95 bg-white/95 shadow-[0_16px_50px_-38px_rgba(0,0,0,0.55)] sm:border-[7px]"
                 >
                   <div className="relative h-[220px] w-full sm:h-[280px]">
                     <Image src={c.image} alt="" fill sizes="100vw" className="object-cover" />
@@ -459,7 +434,7 @@ function ActivitiesEventsSection() {
                       </Link>
                     </div>
                   </div>
-                </div>
+                </Reveal>
               ))}
             </div>
 
@@ -507,7 +482,7 @@ function TestimonialsStripSection() {
           <div className="absolute right-0 bottom-10 size-64 rounded-full bg-sky-200/35 blur-3xl" />
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-700">
+        <div className="grid gap-5 sm:grid-cols-3">
           {[
             {
               name: "Nimal",
@@ -530,11 +505,8 @@ function TestimonialsStripSection() {
               date: "Feb 2026",
               text: "Vehicle was clean and reliable. Clear communication, fair pricing, and a great overall experience.",
             },
-          ].map((t) => (
-            <div
-              key={t.name}
-              className="transition-transform duration-300 hover:-translate-y-0.5 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-700"
-            >
+          ].map((t, idx) => (
+            <Reveal key={t.name} delay={idx * 0.1}>
               <Card
                 className="group relative overflow-hidden rounded-4xl bg-white/75 shadow-[0_14px_40px_-30px_rgba(0,0,0,0.40)] ring-1 ring-zinc-200/70 backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/85 hover:shadow-[0_26px_75px_-50px_rgba(0,0,0,0.50)]"
             >
@@ -578,7 +550,7 @@ function TestimonialsStripSection() {
                 <p className="text-base leading-7 text-zinc-700">{t.text}</p>
               </CardContent>
               </Card>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -594,7 +566,7 @@ function BottomCtaSection() {
           <Image src="/wallpapers/2.jpg" alt="" fill sizes="(max-width: 1024px) 100vw, 1024px" className="object-cover" />
           <div className="absolute inset-0 bg-zinc-950/45" />
         </div>
-        <div className="relative px-6 py-14 text-center text-white sm:px-10 sm:py-20">
+        <Reveal className="relative px-6 py-14 text-center text-white sm:px-10 sm:py-20">
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
             Don’t miss the chance to explore Sri Lanka
           </h2>
@@ -613,7 +585,7 @@ function BottomCtaSection() {
               <Link href="/guide">Become a partner</Link>
             </Button>
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   )
