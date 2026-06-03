@@ -25,6 +25,7 @@ import {
   guideItinerariesService,
   type GuideItinerary,
   type ItineraryCrudService,
+  type ItineraryDesignType,
 } from "@/services/guide-itineraries.service"
 import {
   ItineraryEditorSheet,
@@ -66,12 +67,15 @@ export function ItinerariesEditor({
   profile,
   service = guideItinerariesService,
   uploadPathPrefix = "guides",
+  defaultDesignType = "DAYS",
 }: {
   profile: ItineraryOwnerProfile
   /** CRUD surface to use. Defaults to the guide service. */
   service?: ItineraryCrudService
   /** Storage path root, e.g. "guides" or "activity". */
   uploadPathPrefix?: string
+  /** Format new itineraries start in, and which format tab shows first. */
+  defaultDesignType?: ItineraryDesignType
 }) {
   const [items, setItems] = useState<GuideItinerary[]>([])
   const [loading, setLoading] = useState(true)
@@ -285,6 +289,7 @@ export function ItinerariesEditor({
         profile={profile}
         service={service}
         uploadPathPrefix={uploadPathPrefix}
+        defaultDesignType={defaultDesignType}
         target={editing}
         open={editing !== null}
         onOpenChange={(open) => {

@@ -729,6 +729,7 @@ function ActivityProfileEditor({
         profile={profile}
         service={activityItinerariesService}
         uploadPathPrefix="activity"
+        defaultDesignType="TIME"
       />
 
       <ActivityGalleryEditor profile={profile} onSaved={onChange} />

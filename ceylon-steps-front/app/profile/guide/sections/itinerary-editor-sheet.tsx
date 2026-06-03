@@ -168,6 +168,7 @@ export function ItineraryEditorSheet({
   onSaved,
   service = guideItinerariesService,
   uploadPathPrefix = "guides",
+  defaultDesignType = "DAYS",
 }: {
   profile: ItineraryOwnerProfile;
   target: GuideItinerary | "new" | null;
@@ -178,6 +179,12 @@ export function ItineraryEditorSheet({
   service?: ItineraryCrudService;
   /** Storage path root, e.g. "guides" or "activity". */
   uploadPathPrefix?: string;
+  /**
+   * Format new itineraries start in, and which format tab shows first.
+   * Guides default to multi-day ("DAYS"); activity providers to a single
+   * day with time slots ("TIME").
+   */
+  defaultDesignType?: ItineraryDesignType;
 }) {
   const isCreate = target === "new";
   const itinerary = target === "new" || target === null ? null : target;
@@ -202,7 +209,7 @@ export function ItineraryEditorSheet({
   );
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(true);
-  const [designType, setDesignType] = useState<ItineraryDesignType>("DAYS");
+  const [designType, setDesignType] = useState<ItineraryDesignType>(defaultDesignType);
   const [languagesOffered, setLanguagesOffered] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
@@ -259,7 +266,7 @@ export function ItineraryEditorSheet({
       setImageGradient(randomGradientClass());
       setCoverImageUrl(null);
       setIsActive(true);
-      setDesignType("DAYS");
+      setDesignType(defaultDesignType);
       // Default the offered languages to what the guide already speaks so
       // they don't have to retype them per itinerary. They can still edit.
       const guideLangs = Array.isArray(profile.languages)
@@ -274,7 +281,7 @@ export function ItineraryEditorSheet({
     setLanguageInput("");
     setTagInput("");
     setError(null);
-  }, [open, itinerary, defaultCurrency, profile.languages]);
+  }, [open, itinerary, defaultCurrency, profile.languages, defaultDesignType]);
 
   // Day operations
   function addDay() {
@@ -724,28 +731,30 @@ export function ItineraryEditorSheet({
                 Format
               </span>
               <div className="inline-flex rounded-full bg-white p-1 ring-1 ring-zinc-200/70">
-                <button
-                  type="button"
-                  onClick={() => setDesignType("DAYS")}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                    designType === "DAYS"
-                      ? "bg-zinc-950 text-white shadow-sm"
-                      : "text-zinc-600 hover:text-zinc-950"
-                  }`}
-                >
-                  Multi-day
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDesignType("TIME")}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                    designType === "TIME"
-                      ? "bg-zinc-950 text-white shadow-sm"
-                      : "text-zinc-600 hover:text-zinc-950"
-                  }`}
-                >
-                  Single day with times
-                </button>
+                {(
+                  (defaultDesignType === "TIME"
+                    ? [
+                        { value: "TIME", label: "Single day with times" },
+                        { value: "DAYS", label: "Multi-day" },
+                      ]
+                    : [
+                        { value: "DAYS", label: "Multi-day" },
+                        { value: "TIME", label: "Single day with times" },
+                      ]) as { value: ItineraryDesignType; label: string }[]
+                ).map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setDesignType(opt.value)}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                      designType === opt.value
+                        ? "bg-zinc-950 text-white shadow-sm"
+                        : "text-zinc-600 hover:text-zinc-950"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
               <span className="text-xs text-zinc-500">
                 {designType === "TIME"
