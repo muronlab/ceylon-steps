@@ -151,7 +151,7 @@ export function DriverServicesSection({ profileId }: { profileId: string }) {
 
       {loading ? (
         <div className="grid h-32 place-items-center">
-          <div className="size-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-950" />
+          <div className="size-6 animate-spin rounded-full border-2 border-zinc-200/70 border-t-primary-2 border-r-primary-2/30" />
         </div>
       ) : services.length === 0 ? (
         <div className="rounded-2xl bg-zinc-50 px-4 py-6 text-center ring-1 ring-zinc-200/70">

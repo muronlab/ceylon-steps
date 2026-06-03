@@ -97,3 +97,45 @@ export function SocialIconRow({
   )
 }
 
+export function SocialButtonRow({
+  onGoogle,
+  onFacebook,
+  onApple,
+}: {
+  onGoogle: () => void
+  onFacebook: () => void
+  onApple: () => void
+}) {
+  return (
+    <div className="space-y-3">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onGoogle}
+        className="h-12 w-full gap-2.5 rounded-xl border-zinc-200 bg-white text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+      >
+        <GoogleIcon />
+        Continue with Google
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onFacebook}
+        className="h-12 w-full gap-2.5 rounded-xl border-zinc-200 bg-white text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+      >
+        <FacebookIcon />
+        Continue with Facebook
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onApple}
+        className="h-12 w-full gap-2.5 rounded-xl border-zinc-200 bg-white text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+      >
+        <AppleIcon />
+        Continue with Apple
+      </Button>
+    </div>
+  )
+}
+

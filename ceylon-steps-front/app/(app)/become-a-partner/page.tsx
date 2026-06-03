@@ -426,7 +426,7 @@ export default function BecomeAPartnerPage() {
   if (loading || loadingStatus) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-white">
-        <div className="size-8 animate-spin rounded-full border-4 border-zinc-200 border-t-zinc-950" />
+        <div className="size-8 animate-spin rounded-full border-4 border-zinc-200/70 border-t-primary-2 border-r-primary-2/30" />
       </div>
     )
   }

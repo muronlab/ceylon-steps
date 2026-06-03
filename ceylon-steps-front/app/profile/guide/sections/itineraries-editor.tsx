@@ -24,9 +24,12 @@ import {
 import {
   guideItinerariesService,
   type GuideItinerary,
+  type ItineraryCrudService,
 } from "@/services/guide-itineraries.service"
-import type { GuideProfile } from "@/services/guide-profile.service"
-import { ItineraryEditorSheet } from "./itinerary-editor-sheet"
+import {
+  ItineraryEditorSheet,
+  type ItineraryOwnerProfile,
+} from "./itinerary-editor-sheet"
 
 const PRICE_SCOPE_SUFFIX: Record<string, string> = {
   PER_PERSON: "/ person",
@@ -59,7 +62,17 @@ function formatPrice(value: string | null, currency: string | null) {
 const DEFAULT_GRADIENT =
   "bg-[radial-gradient(900px_circle_at_15%_0%,rgba(59,130,246,0.40),transparent_55%),radial-gradient(900px_circle_at_70%_60%,rgba(16,185,129,0.28),transparent_60%),linear-gradient(120deg,rgba(2,132,199,0.22),rgba(34,197,94,0.14))]"
 
-export function ItinerariesEditor({ profile }: { profile: GuideProfile }) {
+export function ItinerariesEditor({
+  profile,
+  service = guideItinerariesService,
+  uploadPathPrefix = "guides",
+}: {
+  profile: ItineraryOwnerProfile
+  /** CRUD surface to use. Defaults to the guide service. */
+  service?: ItineraryCrudService
+  /** Storage path root, e.g. "guides" or "activity". */
+  uploadPathPrefix?: string
+}) {
   const [items, setItems] = useState<GuideItinerary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -71,7 +84,7 @@ export function ItinerariesEditor({ profile }: { profile: GuideProfile }) {
     setLoading(true)
     setError(null)
     try {
-      const data = await guideItinerariesService.list()
+      const data = await service.list()
       setItems(data)
     } catch (err) {
       if (axios.isAxiosError(err)) {
@@ -103,7 +116,7 @@ export function ItinerariesEditor({ profile }: { profile: GuideProfile }) {
     if (!confirmDelete) return
     setDeleting(true)
     try {
-      await guideItinerariesService.remove(confirmDelete.id)
+      await service.remove(confirmDelete.id)
       setItems((prev) => prev.filter((i) => i.id !== confirmDelete.id))
       setConfirmDelete(null)
     } catch (err) {
@@ -150,7 +163,7 @@ export function ItinerariesEditor({ profile }: { profile: GuideProfile }) {
 
       {loading ? (
         <div className="mt-5 grid place-items-center rounded-3xl bg-zinc-50/70 py-12 ring-1 ring-zinc-200/70">
-          <div className="size-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-950" />
+          <div className="size-6 animate-spin rounded-full border-2 border-zinc-200/70 border-t-primary-2 border-r-primary-2/30" />
         </div>
       ) : items.length === 0 ? (
         <div className="mt-5 rounded-3xl bg-zinc-50 px-6 py-12 text-center text-sm text-zinc-500 ring-1 ring-zinc-200/70">
@@ -270,6 +283,8 @@ export function ItinerariesEditor({ profile }: { profile: GuideProfile }) {
 
       <ItineraryEditorSheet
         profile={profile}
+        service={service}
+        uploadPathPrefix={uploadPathPrefix}
         target={editing}
         open={editing !== null}
         onOpenChange={(open) => {

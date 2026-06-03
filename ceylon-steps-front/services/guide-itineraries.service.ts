@@ -36,7 +36,9 @@ export interface ItineraryImage {
 
 export interface GuideItinerary {
   id: string
-  guideProfileId: string
+  // An itinerary is owned by exactly one of these (the other is null).
+  guideProfileId: string | null
+  activityProviderProfileId?: string | null
 
   title: string
   subtitle: string | null
@@ -96,9 +98,22 @@ export interface SaveItineraryPayload {
   galleryImages?: Array<{ imageUrl: string; caption?: string | null }>
 }
 
+/**
+ * CRUD surface shared by every itinerary owner (guide, activity provider).
+ * The editor components are parameterised over this so the same UI drives any
+ * owner's `/me/itineraries` endpoints.
+ */
+export interface ItineraryCrudService {
+  list: () => Promise<GuideItinerary[]>
+  get: (id: string) => Promise<GuideItinerary>
+  create: (payload: SaveItineraryPayload) => Promise<GuideItinerary>
+  update: (id: string, payload: SaveItineraryPayload) => Promise<GuideItinerary>
+  remove: (id: string) => Promise<void>
+}
+
 const BASE = "/partner/guide-profile/me/itineraries"
 
-export const guideItinerariesService = {
+export const guideItinerariesService: ItineraryCrudService = {
   async list(): Promise<GuideItinerary[]> {
     const res = await apiClient.get<GuideItinerary[]>(BASE)
     return res.data

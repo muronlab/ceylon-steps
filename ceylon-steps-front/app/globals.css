@@ -198,7 +198,9 @@
 }
 .bio-content strong {
   font-weight: 600;
-  color: rgb(24 24 27);
+  /* Inherit colour so bold text keeps any applied text colour instead of
+     forcing near-black. */
+  color: inherit;
 }
 .bio-content em {
   font-style: italic;

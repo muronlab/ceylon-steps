@@ -2,7 +2,26 @@
   "permissions": {
     "allow": [
       "Bash(pnpm add *)",
-      "Bash(timeout 25 pnpm dev)"
+      "Bash(timeout 25 pnpm dev)",
+      "Bash(grep -iE \"profile/activity|profile\\\\\\\\\\\\\\\\activity\")",
+      "Bash(node -e \"const p=require\\('./package.json'\\); const d={...p.dependencies,...p.devDependencies}; console.log\\(Object.keys\\(d\\).filter\\(k=>/tiptap|lexical|slate|markdown|prosemirror|editor|sanitize|dompurify/i.test\\(k\\)\\).join\\('\\\\n'\\)||'\\(no rte/markdown deps\\)'\\)\")",
+      "Bash(cd \"c:/Users/User/Desktop/ceylon step \\(2\\)/ceylon-steps/ceylon-step-back/src/partner/transport-provider/dto\" && grep -rn \"MaxLength\\\\|description\" update-transport-provider-profile.dto.ts 2>/dev/null | head; echo \"=== guide bio limit ===\"; grep -rn \"MaxLength\\\\|bio\" ../../guide/dto/*.ts 2>/dev/null | grep -i \"bio\\\\|MaxLength\" | head)",
+      "Read(//c/Users/User/Desktop/ceylon step \\(2\\)/guide/dto/**)",
+      "Bash(grep -iA0 \"description\\\\|ActivityProviderProfile\")",
+      "Bash(grep -iE \"profile/activity|profile\\\\\\\\\\\\\\\\activity|ghost-input\")",
+      "Bash(node -e \"const p=require\\('./package.json'\\);const d={...p.dependencies};for\\(const k of Object.keys\\(d\\)\\) if\\(/^@tiptap/.test\\(k\\)\\) console.log\\(k, d[k]\\)\")",
+      "Bash(node -e \"const fs=require\\('fs'\\);const base='node_modules/.pnpm';const dir=fs.readdirSync\\(base\\).find\\(d=>d.startsWith\\('@tiptap+extension-text-style@3.23.4'\\)\\);const p=base+'/'+dir+'/node_modules/@tiptap/extension-text-style/dist/index.d.ts';const t=fs.readFileSync\\(p,'utf8'\\);console.log\\(t.split\\(/\\\\r?\\\\n/\\).filter\\(l=>/export|declare const|Color|TextStyle/.test\\(l\\)\\).slice\\(0,40\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(node -e \"console.log\\(require.resolve\\('@tiptap/extension-text-style'\\)\\)\")",
+      "Bash(grep -iE \"profile/activity|profile\\\\\\\\\\\\\\\\activity|ghost-input|activity-description\")",
+      "PowerShell(Stop-Process -Id 5608,9420 -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 600; \"remaining backend: \" + \\(\\(Get-Process -Id 5608,9420 -ErrorAction SilentlyContinue | Measure-Object\\).Count\\))",
+      "Bash(grep -iE \"profile/activity|profile\\\\\\\\\\\\\\\\activity|activity-provider.service|ghost-input|activity-description\")",
+      "Bash(pnpm tsc *)",
+      "Bash(grep -rA 12 \"CREATE TABLE \\\\\"GuideGalleryImage\\\\\"\" \"20260515174619_expand_guide_profile/migration.sql\")",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"Name = 'node.exe'\" | Select-Object ProcessId, @{n='CmdShort';e={ if \\($_.CommandLine.Length -gt 140\\) { $_.CommandLine.Substring\\(0,140\\) } else { $_.CommandLine } }} | Format-Table -AutoSize -Wrap)",
+      "PowerShell(Stop-Process -Id 13656 -Force -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Id 15592 -Force -ErrorAction SilentlyContinue)",
+      "Bash(grep -iE \"profile/activity|profile\\\\\\\\\\\\\\\\activity|activity-provider.service\")",
+      "Bash(echo \"EXIT_CODE=$?\")"
     ]
   }
 }

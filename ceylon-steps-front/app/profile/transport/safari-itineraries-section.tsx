@@ -298,7 +298,7 @@ export function SafariItinerariesSection({ profileId }: { profileId: string }) {
 
       {loading ? (
         <div className="grid place-items-center rounded-3xl bg-zinc-50/70 py-12 ring-1 ring-zinc-200/70">
-          <div className="size-6 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-950" />
+          <div className="size-6 animate-spin rounded-full border-2 border-zinc-200/70 border-t-primary-2 border-r-primary-2/30" />
         </div>
       ) : items.length === 0 ? (
         <div className="rounded-3xl bg-zinc-50 px-6 py-10 text-center text-sm text-zinc-500 ring-1 ring-zinc-200/70">

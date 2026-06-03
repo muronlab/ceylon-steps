@@ -34,13 +34,24 @@ import apiClient from "@/services/api-client";
 import {
   guideItinerariesService,
   type GuideItinerary,
+  type ItineraryCrudService,
   type ItineraryDesignType,
   type ItineraryInclusionKind,
   type ItineraryPriceScope,
   type SaveItineraryPayload,
 } from "@/services/guide-itineraries.service";
-import type { GuideProfile } from "@/services/guide-profile.service";
 import { UploadOverlay } from "./upload-overlay";
+
+/**
+ * Minimal owner-profile shape the editor needs — satisfied by both
+ * `GuideProfile` and `ActivityProviderProfile`. Used to seed the default
+ * currency, default offered-languages, and the upload path.
+ */
+export type ItineraryOwnerProfile = {
+  id: string;
+  currency: string | null;
+  languages: { language: string }[];
+};
 
 const GRADIENT_PRESETS: Array<{
   id: string;
@@ -155,12 +166,18 @@ export function ItineraryEditorSheet({
   open,
   onOpenChange,
   onSaved,
+  service = guideItinerariesService,
+  uploadPathPrefix = "guides",
 }: {
-  profile: GuideProfile;
+  profile: ItineraryOwnerProfile;
   target: GuideItinerary | "new" | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSaved: (saved: GuideItinerary) => void;
+  /** CRUD surface to persist with. Defaults to the guide service. */
+  service?: ItineraryCrudService;
+  /** Storage path root, e.g. "guides" or "activity". */
+  uploadPathPrefix?: string;
 }) {
   const isCreate = target === "new";
   const itinerary = target === "new" || target === null ? null : target;
@@ -374,7 +391,7 @@ export function ItineraryEditorSheet({
     };
     try {
       const ext = file.name.split(".").pop() || "jpg";
-      const path = `guides/${profile.id}/itineraries/cover/${Date.now()}.${ext}`;
+      const path = `${uploadPathPrefix}/${profile.id}/itineraries/cover/${Date.now()}.${ext}`;
       const body = new FormData();
       body.append("file", file);
       body.append("path", path);
@@ -443,7 +460,7 @@ export function ItineraryEditorSheet({
         setGalleryProgress(0);
         stopDrift();
         const ext = file.name.split(".").pop() || "jpg";
-        const path = `guides/${profile.id}/itineraries/gallery/${Date.now()}-${i}.${ext}`;
+        const path = `${uploadPathPrefix}/${profile.id}/itineraries/gallery/${Date.now()}-${i}.${ext}`;
         const body = new FormData();
         body.append("file", file);
         body.append("path", path);
@@ -583,8 +600,8 @@ export function ItineraryEditorSheet({
     setError(null);
     try {
       const saved = isCreate
-        ? await guideItinerariesService.create(payload)
-        : await guideItinerariesService.update(itinerary!.id, payload);
+        ? await service.create(payload)
+        : await service.update(itinerary!.id, payload);
       onSaved(saved);
       onOpenChange(false);
     } catch (err) {

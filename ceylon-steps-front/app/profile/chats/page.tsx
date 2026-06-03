@@ -34,7 +34,7 @@ export default function ChatsPage() {
   if (authLoading || !user) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <div className="size-7 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-950" />
+        <div className="size-7 animate-spin rounded-full border-2 border-zinc-200/70 border-t-primary-2 border-r-primary-2/30" />
       </div>
     )
   }

@@ -191,7 +191,7 @@ export function DayRichEditor({
   if (!editor) {
     return (
       <div className="grid h-24 place-items-center rounded-xl bg-white ring-1 ring-zinc-200/70">
-        <div className="size-5 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-950" />
+        <div className="size-5 animate-spin rounded-full border-2 border-zinc-200/70 border-t-primary-2 border-r-primary-2/30" />
       </div>
     )
   }

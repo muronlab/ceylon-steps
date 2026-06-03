@@ -9,6 +9,8 @@ import { StorageService } from '../../storage/storage.service';
 import { ApplyActivityProviderDto } from './dto/apply-activity-provider.dto';
 import { UpdateActivityApplicationStatusDto } from './dto/update-activity-application-status.dto';
 import { UpdateActivityProviderProfileDto } from './dto/update-activity-provider-profile.dto';
+import { SetActivityGalleryDto } from './dto/set-activity-gallery.dto';
+import { SetActivityLanguagesDto } from './dto/set-activity-languages.dto';
 
 type ApplyFiles = {
   nicFront?: Express.Multer.File[];
@@ -46,6 +48,12 @@ const INCLUDE_DETAIL = {
     },
   },
 } satisfies Prisma.ActivityProviderApplicationInclude;
+
+/** Owner-curated profile relations returned to the provider's own edit view. */
+const PROFILE_INCLUDE = {
+  languages: { orderBy: { language: Prisma.SortOrder.asc } },
+  galleryImages: { orderBy: { sortOrder: Prisma.SortOrder.asc } },
+} satisfies Prisma.ActivityProviderProfileInclude;
 
 @Injectable()
 export class ActivityProviderService {
@@ -166,6 +174,7 @@ export class ActivityProviderService {
   async getMyProfile(userId: string) {
     const profile = await this.prisma.activityProviderProfile.findUnique({
       where: { userId },
+      include: PROFILE_INCLUDE,
     });
     if (!profile) {
       throw new NotFoundException(
@@ -205,11 +214,34 @@ export class ActivityProviderService {
       data.profilePhotoUrl = dto.profilePhotoUrl;
     if (dto.coverPhotoUrl !== undefined)
       data.coverPhotoUrl = dto.coverPhotoUrl;
+    if (dto.businessNameColor !== undefined)
+      data.businessNameColor = dto.businessNameColor;
+    if (dto.displayBusinessName !== undefined)
+      data.displayBusinessName = dto.displayBusinessName;
+    if (dto.businessEmail !== undefined)
+      data.businessEmail = dto.businessEmail
+        ? dto.businessEmail.trim().toLowerCase()
+        : null;
+    if (dto.businessPhone !== undefined)
+      data.businessPhone = dto.businessPhone
+        ? dto.businessPhone.trim()
+        : null;
+    if (dto.businessAddress !== undefined)
+      data.businessAddress = dto.businessAddress
+        ? dto.businessAddress.trim()
+        : null;
+    if (dto.yearsOfExperience !== undefined)
+      data.yearsOfExperience = dto.yearsOfExperience;
+    if (dto.currency !== undefined)
+      data.currency = dto.currency ? dto.currency.trim().toUpperCase() : null;
+    if (dto.pricePerHour !== undefined) data.pricePerHour = dto.pricePerHour;
+    if (dto.pricePerDay !== undefined) data.pricePerDay = dto.pricePerDay;
     if (dto.isActive !== undefined) data.isActive = dto.isActive;
 
     const updated = await this.prisma.activityProviderProfile.update({
       where: { userId },
       data,
+      include: PROFILE_INCLUDE,
     });
 
     await this.prisma.auditLog.create({
@@ -217,6 +249,99 @@ export class ActivityProviderService {
     });
 
     return updated;
+  }
+
+  /** Replace the owner's spoken/service languages. Owner-scoped via userId. */
+  async setLanguages(userId: string, dto: SetActivityLanguagesDto) {
+    const existing = await this.prisma.activityProviderProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+    if (!existing) {
+      throw new NotFoundException(
+        'Activity provider profile not found. Your application must be approved first.',
+      );
+    }
+
+    // Deduplicate by language name (case-insensitive); last entry wins.
+    type Entry = {
+      language: string;
+      level: SetActivityLanguagesDto['languages'][number]['level'];
+      countryCode: string | null;
+    };
+    const seen = new Map<string, Entry>();
+    for (const entry of dto.languages) {
+      const key = entry.language.trim().toLowerCase();
+      if (!key) continue;
+      const code = entry.countryCode
+        ? entry.countryCode.trim().toUpperCase()
+        : null;
+      seen.set(key, {
+        language: entry.language.trim(),
+        level: entry.level,
+        countryCode: code && /^[A-Z]{2}$/.test(code) ? code : null,
+      });
+    }
+    const entries = [...seen.values()];
+
+    await this.prisma.$transaction([
+      this.prisma.activityProviderLanguage.deleteMany({
+        where: { activityProviderProfileId: existing.id },
+      }),
+      ...(entries.length
+        ? [
+            this.prisma.activityProviderLanguage.createMany({
+              data: entries.map((e) => ({
+                activityProviderProfileId: existing.id,
+                language: e.language,
+                level: e.level,
+                countryCode: e.countryCode,
+              })),
+            }),
+          ]
+        : []),
+      this.prisma.auditLog.create({
+        data: { action: 'UPDATE_ACTIVITY_LANGUAGES', userId },
+      }),
+    ]);
+
+    return this.getMyProfile(userId);
+  }
+
+  /** Replace the owner's gallery images. Owner-scoped via userId. */
+  async setGallery(userId: string, dto: SetActivityGalleryDto) {
+    const existing = await this.prisma.activityProviderProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+    if (!existing) {
+      throw new NotFoundException(
+        'Activity provider profile not found. Your application must be approved first.',
+      );
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.activityProviderGalleryImage.deleteMany({
+        where: { activityProviderProfileId: existing.id },
+      }),
+      ...(dto.images.length
+        ? [
+            this.prisma.activityProviderGalleryImage.createMany({
+              data: dto.images.map((img, index) => ({
+                activityProviderProfileId: existing.id,
+                imageUrl: img.imageUrl,
+                caption: img.caption ?? null,
+                sortOrder: img.sortOrder ?? index,
+              })),
+            }),
+          ]
+        : []),
+      this.prisma.auditLog.create({
+        data: { action: 'UPDATE_ACTIVITY_GALLERY', userId },
+      }),
+    ]);
+
+    return this.getMyProfile(userId);
   }
 
   // ── Admin endpoints ────────────────────────────────────────────────

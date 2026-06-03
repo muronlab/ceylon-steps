@@ -359,7 +359,7 @@ export default function ActivityProviderPartnerPage() {
   if (loadingApp) {
     return (
       <div className="grid min-h-[60vh] place-items-center">
-        <div className="size-8 animate-spin rounded-full border-4 border-zinc-200 border-t-zinc-950" />
+        <div className="size-8 animate-spin rounded-full border-4 border-zinc-200/70 border-t-primary-2 border-r-primary-2/30" />
       </div>
     );
   }

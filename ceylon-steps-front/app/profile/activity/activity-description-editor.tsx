@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { EditorContent, useEditor, type Editor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
+import { Color, TextStyle } from "@tiptap/extension-text-style"
 import {
   Bold,
   IndentDecrease,
@@ -15,58 +16,52 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+/** Text-colour palette for the description. `null` clears the colour. */
+const TEXT_COLOURS: { value: string | null; label: string }[] = [
+  { value: null, label: "Default" },
+  { value: "#2563eb", label: "Blue" },
+  { value: "#059669", label: "Green" },
+  { value: "#d97706", label: "Amber" },
+  { value: "#e11d48", label: "Red" },
+  { value: "#7c3aed", label: "Violet" },
+  { value: "#0891b2", label: "Teal" },
+]
+
 /**
- * Rich-text editor for the vehicle "Description" field. Same toolbar as the
- * day-rich-editor but with an "Insert template" button that pastes a starter
- * outline for rental listings. Saves HTML.
+ * Rich-text editor for the activity provider "Description" field. Mirrors the
+ * transport VehicleDescriptionEditor (same toolbar + behaviour, saves HTML) so
+ * the editing experience is consistent across the partner dashboard. The
+ * "Insert template" button pastes an activity-listing starter outline.
  */
 
-const RENTAL_TEMPLATE_HTML = `
-<h2>Available Services</h2>
+const ACTIVITY_TEMPLATE_HTML = `
+<h2>About this experience</h2>
+<p>Tell travellers what makes your activity special — where it happens, how long it lasts, and what they'll remember most.</p>
+<h2>What's included</h2>
 <ul>
-  <li>Self drive rental</li>
-  <li>Vehicle with driver</li>
-  <li>Short term rental</li>
-  <li>Long term rental</li>
-  <li>Available for foreigners and locals</li>
+  <li>Equipment and safety gear</li>
+  <li>Experienced, certified instructors</li>
+  <li>Briefing and basic training</li>
+  <li>Refreshments after the activity</li>
 </ul>
-<h2>Rental Information</h2>
+<h2>What to bring</h2>
 <ul>
-  <li><strong>Daily rental price:</strong> [add price]</li>
-  <li><strong>Refundable deposit:</strong> [add deposit amount]</li>
-  <li><strong>Minimum rental period:</strong> [add minimum days]</li>
+  <li>Clothes you don't mind getting wet</li>
+  <li>A change of dry clothes and a towel</li>
+  <li>Sunscreen and a water bottle</li>
 </ul>
-<h2>Requirements</h2>
+<h2>Good to know</h2>
 <ul>
-  <li>Valid passport or NIC</li>
-  <li>Valid driving license / international driving permit</li>
-  <li>Advance payment required before vehicle handover</li>
+  <li><strong>Best season:</strong> [add months]</li>
+  <li><strong>Minimum age:</strong> [add age]</li>
+  <li><strong>Group size:</strong> [add range]</li>
+  <li><strong>Meeting point:</strong> [add location]</li>
 </ul>
-<h2>Security &amp; Safety</h2>
+<h2>Why book with us</h2>
 <ul>
-  <li>GPS location tracking may be enabled for vehicle security and customer safety.</li>
-  <li>Customer location and trip details may be monitored during the rental period if tracking is enabled.</li>
-</ul>
-<h2>Payment Process</h2>
-<ul>
-  <li>Booking confirmation required before reservation.</li>
-  <li>Initial payment required to reserve the vehicle.</li>
-  <li>Remaining balance should be paid according to the rental agreement.</li>
-  <li>Refundable deposit will be returned after vehicle inspection.</li>
-</ul>
-<h2>Rental Conditions</h2>
-<ul>
-  <li>Customer is responsible for traffic fines and damages during the rental period.</li>
-  <li>Vehicle should be returned on the agreed date and time.</li>
-  <li>Illegal activities and unsafe driving are strictly prohibited.</li>
-  <li><strong>Fuel policy:</strong> [add fuel policy]</li>
-</ul>
-<h2>Why Choose Us</h2>
-<ul>
-  <li>Well maintained vehicles</li>
-  <li>Reliable and trusted service</li>
-  <li>Flexible rental options</li>
-  <li>Customer support available</li>
+  <li>Safety-first, well-maintained equipment</li>
+  <li>Friendly local team who know the area</li>
+  <li>Flexible timings for groups and families</li>
 </ul>
 `.trim()
 
@@ -115,7 +110,7 @@ function Toolbar({
   onInsertTemplate: () => void
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-0.5 rounded-xl bg-white p-1 ring-1 ring-zinc-200/70">
+    <div className="flex flex-wrap items-center gap-0.5 border-b border-zinc-200/70 bg-white p-1.5">
       <ToolButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         active={editor.isActive("heading", { level: 2 })}
@@ -188,10 +183,45 @@ function Toolbar({
 
       <Divider />
 
+      {/* Text colour */}
+      <div className="flex items-center gap-1">
+        {TEXT_COLOURS.map((c) =>
+          c.value === null ? (
+            <button
+              key="default"
+              type="button"
+              onClick={() => editor.chain().focus().unsetColor().run()}
+              title="Default colour"
+              aria-label="Default colour"
+              className="grid size-5 place-items-center rounded-full text-[10px] font-bold text-zinc-700 ring-1 ring-zinc-300 transition hover:bg-zinc-100"
+            >
+              A
+            </button>
+          ) : (
+            <button
+              key={c.value}
+              type="button"
+              onClick={() => editor.chain().focus().setColor(c.value!).run()}
+              title={`${c.label} text`}
+              aria-label={`${c.label} text`}
+              aria-pressed={editor.isActive("textStyle", { color: c.value })}
+              style={{ backgroundColor: c.value }}
+              className={cn(
+                "size-5 rounded-full ring-1 ring-black/10 transition hover:scale-110",
+                editor.isActive("textStyle", { color: c.value }) &&
+                  "ring-2 ring-zinc-900 ring-offset-1",
+              )}
+            />
+          ),
+        )}
+      </div>
+
+      <Divider />
+
       <button
         type="button"
         onClick={onInsertTemplate}
-        title="Insert rental template"
+        title="Insert activity template"
         className="inline-flex h-7 items-center gap-1 rounded-md bg-zinc-100 px-2 text-[10px] font-semibold text-zinc-700 transition hover:bg-zinc-950 hover:text-white"
       >
         <Sparkles className="size-3" />
@@ -201,10 +231,10 @@ function Toolbar({
   )
 }
 
-export function VehicleDescriptionEditor({
+export function ActivityDescriptionEditor({
   value,
   onChange,
-  placeholder = "Describe the vehicle, rental terms, and what makes your service stand out. Use the template button to start from a structured outline.",
+  placeholder = "Describe your activity, what's included, and what makes it memorable. Use the template button to start from a structured outline.",
 }: {
   value: string
   onChange: (html: string) => void
@@ -218,13 +248,15 @@ export function VehicleDescriptionEditor({
       StarterKit.configure({
         heading: { levels: [2, 3] },
       }),
+      TextStyle,
+      Color,
       Placeholder.configure({ placeholder }),
     ],
     content: value || "",
     editorProps: {
       attributes: {
         class:
-          "tiptap bio-content min-h-[200px] w-full max-w-none rounded-xl bg-white p-3 text-sm ring-1 ring-zinc-200/70 focus:outline-none",
+          "tiptap bio-content min-h-[220px] w-full max-w-none bg-white p-4 text-sm focus:outline-none",
       },
     },
     onUpdate({ editor }) {
@@ -260,7 +292,7 @@ export function VehicleDescriptionEditor({
     editor
       .chain()
       .focus()
-      .setContent(RENTAL_TEMPLATE_HTML, { emitUpdate: true })
+      .setContent(ACTIVITY_TEMPLATE_HTML, { emitUpdate: true })
       .run()
     setConfirmReplace(false)
   }
@@ -274,10 +306,10 @@ export function VehicleDescriptionEditor({
   }
 
   return (
-    <div className="grid gap-2">
+    <div className="overflow-hidden rounded-xl bg-white ring-1 ring-zinc-200/70 transition focus-within:ring-zinc-300">
       <Toolbar editor={editor} onInsertTemplate={insertTemplate} />
       {confirmReplace && (
-        <div className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900 ring-1 ring-amber-200">
+        <div className="border-b border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
           Replace existing description with the template? Press &quot;Insert
           template&quot; again to confirm, or keep editing to cancel.
         </div>

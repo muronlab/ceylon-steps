@@ -117,7 +117,7 @@ export default function TransportProfilePage() {
   if (authLoading || loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="size-8 animate-spin rounded-full border-4 border-zinc-200 border-t-zinc-950" />
+        <div className="size-8 animate-spin rounded-full border-4 border-zinc-200/70 border-t-primary-2 border-r-primary-2/30" />
       </div>
     );
   }

@@ -13,6 +13,24 @@ const ITINERARY_INCLUDE = {
   galleryImages: { orderBy: { sortOrder: Prisma.SortOrder.asc } },
 } satisfies Prisma.ItineraryInclude;
 
+/**
+ * An itinerary is owned by exactly one of these. The owner key is used both as
+ * a `where` filter and as the FK to set on create, so a guide can never read or
+ * mutate an activity provider's itinerary and vice versa.
+ */
+export type ItineraryOwner =
+  | { guideProfileId: string }
+  | { activityProviderProfileId: string };
+
+function ownsItinerary(
+  itinerary: { guideProfileId: string | null; activityProviderProfileId: string | null },
+  owner: ItineraryOwner,
+): boolean {
+  return 'guideProfileId' in owner
+    ? itinerary.guideProfileId === owner.guideProfileId
+    : itinerary.activityProviderProfileId === owner.activityProviderProfileId;
+}
+
 @Injectable()
 export class ItinerariesService {
   constructor(private readonly prisma: PrismaService) {}
@@ -61,33 +79,33 @@ export class ItinerariesService {
     return data;
   }
 
-  async list(guideProfileId: string) {
+  async list(owner: ItineraryOwner) {
     return this.prisma.itinerary.findMany({
-      where: { guideProfileId },
+      where: owner,
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
       include: ITINERARY_INCLUDE,
     });
   }
 
-  async getOwned(guideProfileId: string, itineraryId: string) {
+  async getOwned(owner: ItineraryOwner, itineraryId: string) {
     const itinerary = await this.prisma.itinerary.findUnique({
       where: { id: itineraryId },
       include: ITINERARY_INCLUDE,
     });
     if (!itinerary) throw new NotFoundException('Itinerary not found');
-    if (itinerary.guideProfileId !== guideProfileId) {
+    if (!ownsItinerary(itinerary, owner)) {
       throw new ForbiddenException('You do not own this itinerary.');
     }
     return itinerary;
   }
 
-  async create(guideProfileId: string, dto: SaveItineraryDto) {
+  async create(owner: ItineraryOwner, dto: SaveItineraryDto) {
     // Apply the same trim/normalise pipeline used on update so the row is
     // consistent regardless of which path created it.
     const base = this.buildBaseData(dto);
     const created = await this.prisma.itinerary.create({
       data: {
-        guideProfileId,
+        ...owner,
         title: dto.title,
         subtitle: dto.subtitle ?? null,
         designType: dto.designType ?? 'DAYS',
@@ -142,8 +160,8 @@ export class ItinerariesService {
     return created;
   }
 
-  async update(guideProfileId: string, itineraryId: string, dto: SaveItineraryDto) {
-    await this.getOwned(guideProfileId, itineraryId);
+  async update(owner: ItineraryOwner, itineraryId: string, dto: SaveItineraryDto) {
+    await this.getOwned(owner, itineraryId);
 
     const writes: Prisma.PrismaPromise<unknown>[] = [
       this.prisma.itinerary.update({
@@ -217,8 +235,8 @@ export class ItinerariesService {
     });
   }
 
-  async remove(guideProfileId: string, itineraryId: string) {
-    await this.getOwned(guideProfileId, itineraryId);
+  async remove(owner: ItineraryOwner, itineraryId: string) {
+    await this.getOwned(owner, itineraryId);
     await this.prisma.itinerary.delete({ where: { id: itineraryId } });
     return { ok: true };
   }

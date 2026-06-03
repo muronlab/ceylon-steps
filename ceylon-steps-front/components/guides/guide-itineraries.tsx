@@ -268,7 +268,7 @@ export function GuideItineraries({
 
                   {detailLoading && !activeDetail && (
                     <div className="mt-10 flex flex-col items-center gap-3 py-8 text-zinc-500">
-                      <div className="size-7 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-950" />
+                      <div className="size-7 animate-spin rounded-full border-2 border-zinc-200/70 border-t-primary-2 border-r-primary-2/30" />
                       <div className="text-xs">Loading full itinerary…</div>
                     </div>
                   )}

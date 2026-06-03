@@ -2,6 +2,25 @@ import apiClient from "./api-client"
 
 export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED"
 
+export type LanguageLevel = "CONVERSATIONAL" | "FLUENT" | "NATIVE"
+
+export interface ActivityProviderLanguage {
+  id: string
+  activityProviderProfileId: string
+  language: string
+  level: LanguageLevel
+  countryCode: string | null
+}
+
+export interface ActivityProviderGalleryImage {
+  id: string
+  activityProviderProfileId: string
+  imageUrl: string
+  caption: string | null
+  sortOrder: number
+  createdAt: string
+}
+
 export interface ActivityProviderApplicationStatusHistory {
   id: string
   status: ApplicationStatus
@@ -52,11 +71,39 @@ export interface ActivityProviderProfile {
   brdDocumentUrl: string | null
   profilePhotoUrl: string | null
   coverPhotoUrl: string | null
+  businessNameColor: string | null
+  displayBusinessName: boolean
+  businessEmail: string | null
+  businessPhone: string | null
+  businessAddress: string | null
+  yearsOfExperience: number | null
+  currency: string | null
+  // Prisma Decimal values are serialised as strings over the wire.
+  pricePerHour: string | null
+  pricePerDay: string | null
   isActive: boolean
   adminEnabled: boolean
   approvedAt: string
   createdAt: string
   updatedAt: string
+  languages: ActivityProviderLanguage[]
+  galleryImages: ActivityProviderGalleryImage[]
+}
+
+export interface SetActivityLanguagesPayload {
+  languages: Array<{
+    language: string
+    level: LanguageLevel
+    countryCode?: string | null
+  }>
+}
+
+export interface SetActivityGalleryPayload {
+  images: Array<{
+    imageUrl: string
+    caption?: string | null
+    sortOrder?: number
+  }>
 }
 
 export interface UpdateActivityProviderProfilePayload {
@@ -70,6 +117,15 @@ export interface UpdateActivityProviderProfilePayload {
   address?: string
   profilePhotoUrl?: string | null
   coverPhotoUrl?: string | null
+  businessNameColor?: string | null
+  displayBusinessName?: boolean
+  businessEmail?: string | null
+  businessPhone?: string | null
+  businessAddress?: string | null
+  yearsOfExperience?: number | null
+  currency?: string | null
+  pricePerHour?: number | null
+  pricePerDay?: number | null
   isActive?: boolean
 }
 
@@ -102,6 +158,26 @@ export const activityProviderService = {
   ): Promise<ActivityProviderProfile> {
     const res = await apiClient.patch<ActivityProviderProfile>(
       "/partner/activity-provider/profile/me",
+      payload,
+    )
+    return res.data
+  },
+
+  async setLanguages(
+    payload: SetActivityLanguagesPayload,
+  ): Promise<ActivityProviderProfile> {
+    const res = await apiClient.put<ActivityProviderProfile>(
+      "/partner/activity-provider/profile/me/languages",
+      payload,
+    )
+    return res.data
+  },
+
+  async setGallery(
+    payload: SetActivityGalleryPayload,
+  ): Promise<ActivityProviderProfile> {
+    const res = await apiClient.put<ActivityProviderProfile>(
+      "/partner/activity-provider/profile/me/gallery",
       payload,
     )
     return res.data

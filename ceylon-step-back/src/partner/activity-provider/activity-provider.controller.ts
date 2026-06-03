@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -25,6 +26,8 @@ import { ActivityProviderService } from './activity-provider.service';
 import { ApplyActivityProviderDto } from './dto/apply-activity-provider.dto';
 import { UpdateActivityApplicationStatusDto } from './dto/update-activity-application-status.dto';
 import { UpdateActivityProviderProfileDto } from './dto/update-activity-provider-profile.dto';
+import { SetActivityGalleryDto } from './dto/set-activity-gallery.dto';
+import { SetActivityLanguagesDto } from './dto/set-activity-languages.dto';
 
 @ApiTags('partner/activity-provider')
 @Controller('partner/activity-provider')
@@ -107,6 +110,34 @@ export class ActivityProviderController {
     @Body() dto: UpdateActivityProviderProfileDto,
   ) {
     return this.service.updateMyProfile(user.id, dto);
+  }
+
+  @ApiOperation({
+    summary: "Replace the logged-in activity provider's spoken/service languages",
+  })
+  @ApiCookieAuth()
+  @UseGuards(SessionAuthGuard, RolesGuard)
+  @Roles('ACTIVITY_PROVIDER')
+  @Put('profile/me/languages')
+  async setLanguages(
+    @CurrentUser() user: any,
+    @Body() dto: SetActivityLanguagesDto,
+  ) {
+    return this.service.setLanguages(user.id, dto);
+  }
+
+  @ApiOperation({
+    summary: "Replace the logged-in activity provider's gallery images",
+  })
+  @ApiCookieAuth()
+  @UseGuards(SessionAuthGuard, RolesGuard)
+  @Roles('ACTIVITY_PROVIDER')
+  @Put('profile/me/gallery')
+  async setGallery(
+    @CurrentUser() user: any,
+    @Body() dto: SetActivityGalleryDto,
+  ) {
+    return this.service.setGallery(user.id, dto);
   }
 
   @ApiOperation({ summary: 'List all activity applications (Admin only)' })

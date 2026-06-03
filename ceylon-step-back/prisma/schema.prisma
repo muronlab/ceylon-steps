@@ -342,9 +342,10 @@ enum ItineraryPriceScope {
 /// Safari operators can "make an itinerary" from one of their jeeps; the
 /// jeep's title, images, charges, etc. pre-fill the new itinerary.
 model Itinerary {
-  id             String  @id @default(uuid())
-  guideProfileId String?
-  safariJeepId   String?
+  id                        String  @id @default(uuid())
+  guideProfileId            String?
+  safariJeepId              String?
+  activityProviderProfileId String?
 
   title            String
   subtitle         String?
@@ -385,8 +386,9 @@ model Itinerary {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  guideProfile GuideProfile? @relation(fields: [guideProfileId], references: [id], onDelete: Cascade)
-  safariJeep   SafariJeep?   @relation(fields: [safariJeepId], references: [id], onDelete: Cascade)
+  guideProfile            GuideProfile?            @relation(fields: [guideProfileId], references: [id], onDelete: Cascade)
+  safariJeep              SafariJeep?              @relation(fields: [safariJeepId], references: [id], onDelete: Cascade)
+  activityProviderProfile ActivityProviderProfile? @relation(fields: [activityProviderProfileId], references: [id], onDelete: Cascade)
 
   days          ItineraryDay[]
   inclusions    ItineraryInclusion[]
@@ -395,6 +397,8 @@ model Itinerary {
   @@index([guideProfileId])
   @@index([guideProfileId, sortOrder])
   @@index([safariJeepId])
+  @@index([activityProviderProfileId])
+  @@index([activityProviderProfileId, sortOrder], map: "m_itineraries_apId_sortOrder_idx")
   @@map("m_itineraries")
 }
 
@@ -651,6 +655,28 @@ model ActivityProviderProfile {
   profilePhotoUrl String?
   coverPhotoUrl   String?
 
+  /// Optional hex colour for the business-name title (e.g. #2563eb). Null = default.
+  businessNameColor String? @db.VarChar(9)
+
+  /// Public display name preference. False = show provider (full) name,
+  /// true = show the business name instead.
+  displayBusinessName Boolean @default(false)
+
+  /// Business-level contact details. Null on any of these means "same as the
+  /// provider's value" (contactEmail / mobileNumber / address respectively).
+  businessEmail   String?
+  businessPhone   String?
+  businessAddress String?
+
+  /// Self-reported years of experience offering this activity.
+  yearsOfExperience Int?
+  /// ISO 4217 currency code for the prices below, e.g. "LKR", "USD".
+  currency          String?
+  /// Hourly rate in `currency`. Stored as decimal(12, 2).
+  pricePerHour      Decimal? @db.Decimal(12, 2)
+  /// Daily rate in `currency`. Stored as decimal(12, 2).
+  pricePerDay       Decimal? @db.Decimal(12, 2)
+
   /// Owner-controlled visibility flag.
   isActive     Boolean @default(true)
   /// Admin-controlled visibility flag. Both must be true to be public.
@@ -663,9 +689,44 @@ model ActivityProviderProfile {
   user        User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
   application ActivityProviderApplication @relation("ActivityApplicationProfile", fields: [applicationId], references: [id])
 
+  languages     ActivityProviderLanguage[]
+  galleryImages ActivityProviderGalleryImage[]
+  itineraries   Itinerary[]
+
   @@index([userId])
   @@index([applicationId])
   @@map("m_activity_provider_profiles")
+}
+
+model ActivityProviderLanguage {
+  id                        String        @id @default(uuid())
+  activityProviderProfileId String
+  language                  String
+  level                     LanguageLevel
+  /// ISO 3166-1 alpha-2 country code (uppercase), e.g. "GB", "LK".
+  /// Used to render a flag next to the language on the public profile.
+  countryCode               String?
+
+  activityProviderProfile ActivityProviderProfile @relation(fields: [activityProviderProfileId], references: [id], onDelete: Cascade, map: "m_apl_profile_fkey")
+
+  @@unique([activityProviderProfileId, language], map: "m_apl_profile_language_key")
+  @@index([activityProviderProfileId], map: "m_apl_profile_idx")
+  @@map("m_activity_provider_languages")
+}
+
+model ActivityProviderGalleryImage {
+  id                        String   @id @default(uuid())
+  activityProviderProfileId String
+  imageUrl                  String
+  caption                   String?
+  sortOrder                 Int      @default(0)
+  createdAt                 DateTime @default(now())
+
+  activityProviderProfile ActivityProviderProfile @relation(fields: [activityProviderProfileId], references: [id], onDelete: Cascade, map: "m_apgi_profile_fkey")
+
+  @@index([activityProviderProfileId], map: "m_apgi_profile_idx")
+  @@index([activityProviderProfileId, sortOrder], map: "m_apgi_profile_sort_idx")
+  @@map("m_activity_provider_gallery_images")
 }
 
 /// Provider-initiated request to change their `providerType`. Admin must
