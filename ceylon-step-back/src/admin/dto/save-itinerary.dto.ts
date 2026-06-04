@@ -11,6 +11,7 @@ import {
   IsString,
   IsUrl,
   Matches,
+  Max,
   MaxLength,
   Min,
   ValidateNested,
@@ -126,6 +127,17 @@ export class SaveItineraryDto {
   @IsInt()
   @Min(0)
   durationDays?: number | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Total duration in minutes — used when designType is DURATION (e.g. 240 for "4 hours"). Null for DAYS / TIME.',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(43_200)
+  durationMinutes?: number | null;
 
   @ApiPropertyOptional()
   @IsOptional()

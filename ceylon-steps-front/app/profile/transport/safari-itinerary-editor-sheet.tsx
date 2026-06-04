@@ -40,6 +40,7 @@ import {
   type SaveItineraryPayload,
 } from "@/services/safari-itineraries.service"
 import { UploadOverlay } from "@/app/profile/guide/sections/upload-overlay"
+import { OfferedLanguagesField } from "@/app/profile/guide/sections/offered-languages-field"
 
 const GRADIENT_PRESETS: Array<{
   id: string
@@ -186,7 +187,6 @@ export function SafariItineraryEditorSheet({
   const [languagesOffered, setLanguagesOffered] = useState<string[]>([])
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState("")
-  const [languageInput, setLanguageInput] = useState("")
 
   const [days, setDays] = useState<DayDraft[]>([])
   const [inclusions, setInclusions] = useState<InclusionDraft[]>([])
@@ -221,7 +221,6 @@ export function SafariItineraryEditorSheet({
     setDays(toDays(itinerary))
     setInclusions(toInclusions(itinerary))
     setImages(toImages(itinerary))
-    setLanguageInput("")
     setTagInput("")
     setError(null)
   }, [open, itinerary])
@@ -244,20 +243,6 @@ export function SafariItineraryEditorSheet({
   }
   function patchDay(id: string, p: Partial<DayDraft>) {
     setDays((d) => d.map((x) => (x.id === id ? { ...x, ...p } : x)))
-  }
-
-  function addLanguage(raw: string) {
-    const trimmed = raw.trim()
-    if (!trimmed) return
-    setLanguagesOffered((prev) =>
-      prev.some((l) => l.toLowerCase() === trimmed.toLowerCase())
-        ? prev
-        : [...prev, trimmed],
-    )
-    setLanguageInput("")
-  }
-  function removeLanguage(lang: string) {
-    setLanguagesOffered((prev) => prev.filter((l) => l !== lang))
   }
 
   function addTag(raw: string) {
@@ -808,54 +793,12 @@ export function SafariItineraryEditorSheet({
               <div className="grid gap-2">
                 <p className="text-xs text-zinc-500">
                   Defaults to the driver&apos;s languages from the safari jeep.
+                  Add or remove any for this itinerary specifically.
                 </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {languagesOffered.length === 0 ? (
-                    <span className="text-xs text-zinc-400">
-                      No languages selected yet.
-                    </span>
-                  ) : (
-                    languagesOffered.map((lang) => (
-                      <span
-                        key={lang}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-800"
-                      >
-                        {lang}
-                        <button
-                          type="button"
-                          onClick={() => removeLanguage(lang)}
-                          className="text-zinc-500 hover:text-red-600"
-                          aria-label={`Remove ${lang}`}
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    value={languageInput}
-                    onChange={(e) => setLanguageInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === ",") {
-                        e.preventDefault()
-                        addLanguage(languageInput)
-                      }
-                    }}
-                    placeholder="Add a language (e.g. English) and press Enter"
-                    className="h-9 rounded-full text-xs"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addLanguage(languageInput)}
-                    className="h-9 rounded-full text-xs"
-                  >
-                    Add
-                  </Button>
-                </div>
+                <OfferedLanguagesField
+                  value={languagesOffered}
+                  onChange={setLanguagesOffered}
+                />
               </div>
             </Field>
 
@@ -873,7 +816,7 @@ export function SafariItineraryEditorSheet({
                         key={t}
                         className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-800 ring-1 ring-blue-200/70"
                       >
-                        #{t}
+                        {t}
                         <button
                           type="button"
                           onClick={() => removeTag(t)}

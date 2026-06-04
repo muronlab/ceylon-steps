@@ -322,11 +322,16 @@ model GuideLanguage {
   @@map("m_guide_languages")
 }
 
-/// Whether an itinerary's day list is structured as multi-day (Day 1, Day 2…)
-/// or single-day with time slots (09:00–10:30, etc.).
+/// How an itinerary's schedule is structured:
+/// - DAYS: multi-day (Day 1, Day 2…).
+/// - TIME: single day with time slots (09:00–10:30, etc.).
+/// - DURATION: a single total duration (e.g. "4 hours") with no fixed start /
+///   end times. `durationMinutes` carries the length; day rows are optional,
+///   untimed "steps".
 enum ItineraryDesignType {
   DAYS
   TIME
+  DURATION
 }
 
 /// What the itinerary price refers to. Drives the "$X / person" label on the
@@ -361,7 +366,10 @@ model Itinerary {
   tags             String[]            @default([])
   /// Numeric duration in days (used for sorting/filtering later).
   durationDays     Int?
-  /// Free-form duration label e.g. "1 day", "9 days", "Half day".
+  /// Total duration in minutes — set when designType is DURATION (e.g. 240 for
+  /// "4 hours"). Null for DAYS / TIME. Lets us sort/filter sub-day experiences.
+  durationMinutes  Int?
+  /// Free-form duration label e.g. "1 day", "9 days", "Half day", "4h 30m".
   durationLabel    String?
   /// Price in `currency`. Stored as decimal(12, 2).
   price            Decimal?            @db.Decimal(12, 2)
@@ -676,6 +684,12 @@ model ActivityProviderProfile {
   pricePerHour      Decimal? @db.Decimal(12, 2)
   /// Daily rate in `currency`. Stored as decimal(12, 2).
   pricePerDay       Decimal? @db.Decimal(12, 2)
+  /// Fixed package price (alternative to the time-based hourly/daily rates) in
+  /// `currency`. A provider offers EITHER rates, a package, or both.
+  packagePrice      Decimal? @db.Decimal(12, 2)
+  /// Whether `packagePrice` is charged per person or per group. Reuses the
+  /// itinerary scope enum but only PER_PERSON / PER_GROUP are used here.
+  packagePriceScope ItineraryPriceScope?
 
   /// Owner-controlled visibility flag.
   isActive     Boolean @default(true)

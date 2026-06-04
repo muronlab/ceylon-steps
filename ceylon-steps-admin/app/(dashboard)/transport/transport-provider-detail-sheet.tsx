@@ -938,7 +938,9 @@ function SafariItineraryRow({
           <span>
             {itinerary.designType === "TIME"
               ? `${itinerary.days.length} slot${itinerary.days.length === 1 ? "" : "s"}`
-              : `${itinerary.days.length} day${itinerary.days.length === 1 ? "" : "s"}`}
+              : itinerary.designType === "DURATION"
+                ? `${itinerary.days.length} step${itinerary.days.length === 1 ? "" : "s"}`
+                : `${itinerary.days.length} day${itinerary.days.length === 1 ? "" : "s"}`}
           </span>
           <span>
             {itinerary.galleryImages.length} photo

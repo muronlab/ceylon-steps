@@ -1,7 +1,9 @@
 import React, { useEffect } from "react";
 
 export const useOutsideClick = (
-  ref: React.RefObject<HTMLDivElement>,
+  // Accept a nullable ref — `useRef<HTMLDivElement>(null)` resolves to
+  // `RefObject<HTMLDivElement | null>` under React 19's types.
+  ref: React.RefObject<HTMLDivElement | null>,
   callback: Function
 ) => {
   useEffect(() => {

@@ -245,7 +245,9 @@ export function ItinerariesEditor({
                       <span className="rounded-full bg-zinc-100 px-2 py-0.5">
                         {it.designType === "TIME"
                           ? `${it.days.length} stop${it.days.length === 1 ? "" : "s"}`
-                          : `${it.days.length} day${it.days.length === 1 ? "" : "s"}`}
+                          : it.designType === "DURATION"
+                            ? `${it.days.length} step${it.days.length === 1 ? "" : "s"}`
+                            : `${it.days.length} day${it.days.length === 1 ? "" : "s"}`}
                       </span>
                     )}
                     {it.galleryImages.length > 0 && (

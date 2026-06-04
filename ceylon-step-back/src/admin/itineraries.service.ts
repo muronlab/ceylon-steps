@@ -63,6 +63,8 @@ export class ItinerariesService {
       data.tags = [...seen];
     }
     if (dto.durationDays !== undefined) data.durationDays = dto.durationDays;
+    if (dto.durationMinutes !== undefined)
+      data.durationMinutes = dto.durationMinutes;
     if (dto.durationLabel !== undefined) data.durationLabel = dto.durationLabel;
     if (dto.price !== undefined) data.price = dto.price;
     if (dto.currency !== undefined) {
@@ -113,6 +115,7 @@ export class ItinerariesService {
           (base.languagesOffered as string[] | undefined) ?? [],
         tags: (base.tags as string[] | undefined) ?? [],
         durationDays: dto.durationDays ?? null,
+        durationMinutes: dto.durationMinutes ?? null,
         durationLabel: dto.durationLabel ?? null,
         price: dto.price ?? null,
         currency: dto.currency ? dto.currency.toUpperCase() : null,

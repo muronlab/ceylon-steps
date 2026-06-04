@@ -111,6 +111,8 @@ export interface AdminGuideDetailItinerary {
   title: string
   subtitle: string | null
   durationDays: number | null
+  /** Total minutes — set only when designType is DURATION. */
+  durationMinutes: number | null
   durationLabel: string | null
   price: string | null
   currency: string | null

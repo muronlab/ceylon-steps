@@ -13,9 +13,15 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type {
+  ActivityPackageScope,
   ActivityProviderProfile,
   UpdateActivityProviderProfilePayload,
 } from "@/services/activity-provider.service"
+
+const PACKAGE_SCOPE_SUFFIX: Record<ActivityPackageScope, string> = {
+  PER_PERSON: "/ person",
+  PER_GROUP: "/ group",
+}
 
 const CURRENCIES: Array<{ code: string; label: string }> = [
   { code: "LKR", label: "LKR — Sri Lankan Rupee" },
@@ -64,6 +70,10 @@ export function ActivityExperienceRatesEditor({
   const [currency, setCurrency] = useState<string>(profile.currency ?? "LKR")
   const [hour, setHour] = useState<string>(profile.pricePerHour ?? "")
   const [day, setDay] = useState<string>(profile.pricePerDay ?? "")
+  const [pkg, setPkg] = useState<string>(profile.packagePrice ?? "")
+  const [pkgScope, setPkgScope] = useState<ActivityPackageScope>(
+    profile.packagePriceScope ?? "PER_PERSON",
+  )
   const [error, setError] = useState<string | null>(null)
 
   function startEdit() {
@@ -75,6 +85,8 @@ export function ActivityExperienceRatesEditor({
     setCurrency(profile.currency ?? "LKR")
     setHour(profile.pricePerHour ?? "")
     setDay(profile.pricePerDay ?? "")
+    setPkg(profile.packagePrice ?? "")
+    setPkgScope(profile.packagePriceScope ?? "PER_PERSON")
     setError(null)
     setEditing(true)
   }
@@ -99,13 +111,19 @@ export function ActivityExperienceRatesEditor({
 
     const hourValue = parseMoney(hour)
     const dayValue = parseMoney(day)
-    if (Number.isNaN(hourValue) || Number.isNaN(dayValue)) {
-      setError("Rates must be non-negative numbers.")
+    const pkgValue = parseMoney(pkg)
+    if (
+      Number.isNaN(hourValue) ||
+      Number.isNaN(dayValue) ||
+      Number.isNaN(pkgValue)
+    ) {
+      setError("Prices must be non-negative numbers.")
       return
     }
 
-    const usingRates = hourValue !== null || dayValue !== null
-    const finalCurrency = usingRates ? currency : null
+    const usingPricing =
+      hourValue !== null || dayValue !== null || pkgValue !== null
+    const finalCurrency = usingPricing ? currency : null
 
     setSaving(true)
     setError(null)
@@ -115,6 +133,9 @@ export function ActivityExperienceRatesEditor({
         currency: finalCurrency,
         pricePerHour: hourValue,
         pricePerDay: dayValue,
+        packagePrice: pkgValue,
+        // Scope only matters when a package price is set.
+        packagePriceScope: pkgValue !== null ? pkgScope : null,
       })
       setEditing(false)
     } catch {
@@ -128,7 +149,11 @@ export function ActivityExperienceRatesEditor({
     profile.yearsOfExperience !== null && profile.yearsOfExperience !== undefined
   const hourlyDisplay = formatMoney(profile.pricePerHour, profile.currency)
   const dailyDisplay = formatMoney(profile.pricePerDay, profile.currency)
-  const hasAnyRate = !!hourlyDisplay || !!dailyDisplay
+  const packageDisplay = formatMoney(profile.packagePrice, profile.currency)
+  const packageScopeLabel = profile.packagePriceScope
+    ? PACKAGE_SCOPE_SUFFIX[profile.packagePriceScope]
+    : ""
+  const hasAnyRate = !!hourlyDisplay || !!dailyDisplay || !!packageDisplay
 
   return (
     <div className="rounded-3xl bg-white p-5 ring-1 ring-zinc-200">
@@ -187,6 +212,13 @@ export function ActivityExperienceRatesEditor({
             label="Daily"
             value={dailyDisplay ?? "—"}
           />
+          {packageDisplay && (
+            <Stat
+              icon={<Banknote className="size-4 text-zinc-500" />}
+              label="Package"
+              value={`${packageDisplay} ${packageScopeLabel}`.trim()}
+            />
+          )}
           {!hasYears && !hasAnyRate && (
             <div className="rounded-2xl bg-zinc-50 px-4 py-3 text-xs text-zinc-500 ring-1 ring-zinc-200/70 sm:col-span-3">
               Optional — add your experience and pricing so travellers can decide quickly.
@@ -252,8 +284,40 @@ export function ActivityExperienceRatesEditor({
             </FieldBlock>
           </div>
 
+          {/* Package price — an alternative to time-based rates. */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <FieldBlock label={`Package price (${currency})`}>
+              <Input
+                type="number"
+                min={0}
+                step="0.01"
+                inputMode="decimal"
+                value={pkg}
+                onChange={(e) => setPkg(e.target.value)}
+                placeholder="Leave blank if not offered"
+                className="h-10 rounded-2xl"
+              />
+            </FieldBlock>
+            <FieldBlock label="Package is charged">
+              <Select
+                value={pkgScope}
+                onValueChange={(v) => setPkgScope(v as ActivityPackageScope)}
+              >
+                <SelectTrigger className="h-10 rounded-2xl" disabled={pkg.trim() === ""}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PER_PERSON">Per person</SelectItem>
+                  <SelectItem value="PER_GROUP">Per group</SelectItem>
+                </SelectContent>
+              </Select>
+            </FieldBlock>
+          </div>
+
           <p className="text-xs text-zinc-500">
-            Both rates are optional. Leave a field blank if you don&apos;t offer it.
+            All prices are optional. Offer time-based rates (hourly / daily), a
+            fixed package price, or any combination. Leave a field blank if you
+            don&apos;t offer it.
           </p>
 
           <div className="flex justify-end">

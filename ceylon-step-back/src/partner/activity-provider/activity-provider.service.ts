@@ -62,7 +62,11 @@ export class ActivityProviderService {
     private readonly storage: StorageService,
   ) {}
 
-  async apply(dto: ApplyActivityProviderDto, files: ApplyFiles, userId: string) {
+  async apply(
+    dto: ApplyActivityProviderDto,
+    files: ApplyFiles,
+    userId: string,
+  ) {
     const existing = userId
       ? await this.prisma.activityProviderApplication.findFirst({
           where: { createdBy: userId },
@@ -212,8 +216,7 @@ export class ActivityProviderService {
     if (dto.address !== undefined) data.address = dto.address;
     if (dto.profilePhotoUrl !== undefined)
       data.profilePhotoUrl = dto.profilePhotoUrl;
-    if (dto.coverPhotoUrl !== undefined)
-      data.coverPhotoUrl = dto.coverPhotoUrl;
+    if (dto.coverPhotoUrl !== undefined) data.coverPhotoUrl = dto.coverPhotoUrl;
     if (dto.businessNameColor !== undefined)
       data.businessNameColor = dto.businessNameColor;
     if (dto.displayBusinessName !== undefined)
@@ -223,9 +226,7 @@ export class ActivityProviderService {
         ? dto.businessEmail.trim().toLowerCase()
         : null;
     if (dto.businessPhone !== undefined)
-      data.businessPhone = dto.businessPhone
-        ? dto.businessPhone.trim()
-        : null;
+      data.businessPhone = dto.businessPhone ? dto.businessPhone.trim() : null;
     if (dto.businessAddress !== undefined)
       data.businessAddress = dto.businessAddress
         ? dto.businessAddress.trim()
@@ -236,6 +237,9 @@ export class ActivityProviderService {
       data.currency = dto.currency ? dto.currency.trim().toUpperCase() : null;
     if (dto.pricePerHour !== undefined) data.pricePerHour = dto.pricePerHour;
     if (dto.pricePerDay !== undefined) data.pricePerDay = dto.pricePerDay;
+    if (dto.packagePrice !== undefined) data.packagePrice = dto.packagePrice;
+    if (dto.packagePriceScope !== undefined)
+      data.packagePriceScope = dto.packagePriceScope;
     if (dto.isActive !== undefined) data.isActive = dto.isActive;
 
     const updated = await this.prisma.activityProviderProfile.update({
@@ -370,9 +374,10 @@ export class ActivityProviderService {
     dto: UpdateActivityApplicationStatusDto,
     adminId: string,
   ) {
-    const application = await this.prisma.activityProviderApplication.findUnique({
-      where: { id },
-    });
+    const application =
+      await this.prisma.activityProviderApplication.findUnique({
+        where: { id },
+      });
     if (!application) {
       throw new NotFoundException('Activity application not found');
     }

@@ -8,10 +8,28 @@ import { cn } from "@/lib/utils"
 interface ChatPopupProps {
   recipientName?: string
   recipientRole?: string
+  /**
+   * Optional controlled open state. When provided, the parent owns the
+   * open/close state (e.g. a "Message the host" CTA elsewhere on the page can
+   * open it). Omit both to keep the popup self-managed as before.
+   */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function ChatPopup({ recipientName = "Support", recipientRole = "Online" }: ChatPopupProps) {
-  const [isOpen, setIsOpen] = useState(false)
+export function ChatPopup({
+  recipientName = "Support",
+  recipientRole = "Online",
+  open,
+  onOpenChange,
+}: ChatPopupProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isControlled = open !== undefined
+  const isOpen = isControlled ? open : internalOpen
+  const setIsOpen = (next: boolean) => {
+    if (!isControlled) setInternalOpen(next)
+    onOpenChange?.(next)
+  }
   const [message, setMessage] = useState("")
   const [messages, setMessages] = useState([
     { id: 1, text: "Hi there! How can I help you today?", sender: "them", time: "10:00 AM" },

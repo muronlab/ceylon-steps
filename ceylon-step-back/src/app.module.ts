@@ -17,6 +17,10 @@ import { AdminActivityProvidersController } from './admin/activity-providers.con
 import { ActivityProvidersService } from './admin/activity-providers.service';
 import { PublicGuidesController } from './public/public-guides.controller';
 import { PublicGuidesService } from './public/public-guides.service';
+import { PublicItinerariesController } from './public/public-itineraries.controller';
+import { PublicItinerariesService } from './public/public-itineraries.service';
+import { PublicPartnersController } from './public/public-partners.controller';
+import { PublicPartnersService } from './public/public-partners.service';
 import { RolesGuard } from './rbac/roles.guard';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { StorageModule } from './storage/storage.module';
@@ -51,6 +55,8 @@ import { ChatModule } from './chat/chat.module';
     AdminTransportProvidersController,
     AdminActivityProvidersController,
     PublicGuidesController,
+    PublicItinerariesController,
+    PublicPartnersController,
   ],
   providers: [
     AppService,
@@ -60,6 +66,8 @@ import { ChatModule } from './chat/chat.module';
     TransportProvidersService,
     ActivityProvidersService,
     PublicGuidesService,
+    PublicItinerariesService,
+    PublicPartnersService,
   ],
 })
 export class AppModule {}

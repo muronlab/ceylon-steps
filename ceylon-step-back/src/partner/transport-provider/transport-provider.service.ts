@@ -1039,10 +1039,11 @@ export class TransportProviderService {
     payload: {
       title: string;
       subtitle?: string | null;
-      designType?: 'DAYS' | 'TIME';
+      designType?: 'DAYS' | 'TIME' | 'DURATION';
       languagesOffered?: string[];
       tags?: string[];
       durationDays?: number | null;
+      durationMinutes?: number | null;
       durationLabel?: string | null;
       price?: number | string | null;
       currency?: string | null;
@@ -1076,6 +1077,7 @@ export class TransportProviderService {
           languagesOffered: payload.languagesOffered ?? [],
           tags: payload.tags ?? [],
           durationDays: payload.durationDays ?? null,
+          durationMinutes: payload.durationMinutes ?? null,
           durationLabel: payload.durationLabel ?? null,
           price:
             payload.price !== undefined && payload.price !== null

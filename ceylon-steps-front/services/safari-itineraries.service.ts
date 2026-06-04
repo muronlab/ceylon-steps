@@ -31,6 +31,8 @@ export interface SafariItinerary {
   languagesOffered: string[]
   tags: string[]
   durationDays: number | null
+  /** Total minutes — set only when designType is DURATION. */
+  durationMinutes: number | null
   durationLabel: string | null
   /** Prisma serialises Decimal as a string over JSON. */
   price: string | null

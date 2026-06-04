@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsEmail,
+  IsIn,
   IsInt,
   IsNumber,
   IsOptional,
@@ -14,6 +15,10 @@ import {
   Min,
   ValidateIf,
 } from 'class-validator';
+
+/** Scope values accepted for a package price. */
+export const ACTIVITY_PACKAGE_SCOPES = ['PER_PERSON', 'PER_GROUP'] as const;
+export type ActivityPackageScope = (typeof ACTIVITY_PACKAGE_SCOPES)[number];
 
 export class UpdateActivityProviderProfileDto {
   @ApiPropertyOptional()
@@ -83,7 +88,8 @@ export class UpdateActivityProviderProfileDto {
   coverPhotoUrl?: string | null;
 
   @ApiPropertyOptional({
-    description: 'Hex colour for the business-name title, e.g. #2563eb. Null clears it.',
+    description:
+      'Hex colour for the business-name title, e.g. #2563eb. Null clears it.',
   })
   @IsOptional()
   @ValidateIf((_, v) => v !== null)
@@ -141,7 +147,8 @@ export class UpdateActivityProviderProfileDto {
   yearsOfExperience?: number | null;
 
   @ApiPropertyOptional({
-    description: 'ISO 4217 currency code (uppercase 3 letters), e.g. "LKR", "USD".',
+    description:
+      'ISO 4217 currency code (uppercase 3 letters), e.g. "LKR", "USD".',
   })
   @IsOptional()
   @ValidateIf((_, v) => v !== null)
@@ -166,6 +173,26 @@ export class UpdateActivityProviderProfileDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   pricePerDay?: number | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Fixed package price in `currency` (alternative to hourly/daily rates).',
+  })
+  @IsOptional()
+  @ValidateIf((_, v) => v !== null)
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  packagePrice?: number | null;
+
+  @ApiPropertyOptional({
+    description: 'Whether the package price is per person or per group.',
+    enum: ACTIVITY_PACKAGE_SCOPES,
+  })
+  @IsOptional()
+  @ValidateIf((_, v) => v !== null)
+  @IsIn(ACTIVITY_PACKAGE_SCOPES)
+  packagePriceScope?: ActivityPackageScope | null;
 
   @ApiPropertyOptional({
     description:

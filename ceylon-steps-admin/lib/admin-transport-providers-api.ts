@@ -211,7 +211,7 @@ export interface AdminSafariJeepCharge {
   sortOrder: number
 }
 
-export type AdminItineraryDesignType = "DAYS" | "TIME"
+export type AdminItineraryDesignType = "DAYS" | "TIME" | "DURATION"
 export type AdminItineraryPriceScope = "PER_PERSON" | "PER_GROUP" | "PER_DAY"
 export type AdminItineraryInclusionKind = "INCLUDED" | "EXCLUDED"
 
@@ -248,6 +248,8 @@ export interface AdminSafariItinerary {
   languagesOffered: string[]
   tags: string[]
   durationDays: number | null
+  /** Total minutes — set only when designType is DURATION. */
+  durationMinutes: number | null
   durationLabel: string | null
   price: string | null
   currency: string | null

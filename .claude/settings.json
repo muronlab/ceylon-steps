@@ -21,7 +21,19 @@
       "PowerShell(Stop-Process -Id 13656 -Force -ErrorAction SilentlyContinue)",
       "PowerShell(Stop-Process -Id 15592 -Force -ErrorAction SilentlyContinue)",
       "Bash(grep -iE \"profile/activity|profile\\\\\\\\\\\\\\\\activity|activity-provider.service\")",
-      "Bash(echo \"EXIT_CODE=$?\")"
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Bash(echo \"===EXIT $?===\")",
+      "Bash(echo \"===LINT EXIT $?===\")",
+      "Bash(echo \"===ESLINT EXIT $?===\")",
+      "Bash(grep -vE \"set-state-in-effect|setState|cascading|Effects are|Update external|Subscribe|^\\\\s*\\\\*|react.dev|^\\\\s*$|^\\\\s*[0-9]+ \\\\||\\\\^\")",
+      "Bash(grep -ivE \"set-state-in-effect|setState\\\\\\(\\\\\\)|cascading|Effects are|Update external|Subscribe|react.dev|^\\\\s*\\\\*|^\\\\s*$|^\\\\s*[0-9]+ \\\\||^\\\\s*\\\\^|synchronously within\")",
+      "Bash(grep -iE \"activities/\\\\[id\\\\]|activities\\\\\\\\\\\\\\\\\\\\[id\\\\]\")",
+      "Bash(xargs -I{} sh -c 'cat \"ceylon-step-back/prisma/migrations/{}/migration.sql\" | head -20')",
+      "Bash(grep -ivE \"set-state-in-effect|setState\\\\\\(\\\\\\)|cascading|Effects are|Update external|Subscribe|react.dev|^\\\\s*\\\\*|^\\\\s*$|^\\\\s*[0-9]+ \\\\||^\\\\s*\\\\^|synchronously within|suggestCanonical|can be written as|break-words|background-image:repeating\")",
+      "Bash(node -e \"const fs=require\\('fs'\\);const b=fs.readFileSync\\('1338051.png'\\);if\\(b.toString\\('ascii',1,4\\)==='PNG'\\){const w=b.readUInt32BE\\(16\\),h=b.readUInt32BE\\(20\\);console.log\\('width',w,'height',h\\)}else{console.log\\('not png header'\\)}\")",
+      "Bash(grep -ivE \"no-explicit-any|set-state-in-effect|react.dev|^\\\\s*\\\\*|^\\\\s*$|^\\\\s*[0-9]+ \\\\||^\\\\s*\\\\^\")",
+      "Bash(grep -ivE \"set-state-in-effect|react.dev|^\\\\s*\\\\*|^\\\\s*$|^\\\\s*[0-9]+ \\\\||^\\\\s*\\\\^|synchronously within|Effects are|cascading|Update external|Subscribe|suggestCanonical|can be written as|break-words|background-image:repeating\")",
+      "WebSearch"
     ]
   }
 }

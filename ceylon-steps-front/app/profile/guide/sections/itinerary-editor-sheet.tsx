@@ -41,6 +41,8 @@ import {
   type SaveItineraryPayload,
 } from "@/services/guide-itineraries.service";
 import { UploadOverlay } from "./upload-overlay";
+import { OfferedLanguagesField } from "./offered-languages-field";
+import { formatDurationMinutes } from "@/lib/itinerary-duration";
 
 /**
  * Minimal owner-profile shape the editor needs — satisfied by both
@@ -210,10 +212,13 @@ export function ItineraryEditorSheet({
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(true);
   const [designType, setDesignType] = useState<ItineraryDesignType>(defaultDesignType);
+  // Hours / minutes inputs for the DURATION design type. Kept as strings so the
+  // fields can be cleared; combined into total minutes on save.
+  const [durationHours, setDurationHours] = useState("");
+  const [durationMins, setDurationMins] = useState("");
   const [languagesOffered, setLanguagesOffered] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
-  const [languageInput, setLanguageInput] = useState("");
 
   const [days, setDays] = useState<DayDraft[]>([]);
   const [inclusions, setInclusions] = useState<InclusionDraft[]>([]);
@@ -247,6 +252,9 @@ export function ItineraryEditorSheet({
       setCoverImageUrl(itinerary.coverImageUrl ?? null);
       setIsActive(itinerary.isActive);
       setDesignType(itinerary.designType ?? "DAYS");
+      const mins = itinerary.durationMinutes ?? 0;
+      setDurationHours(mins > 0 ? String(Math.floor(mins / 60)) : "");
+      setDurationMins(mins > 0 && mins % 60 !== 0 ? String(mins % 60) : "");
       setLanguagesOffered(itinerary.languagesOffered ?? []);
       setTags(itinerary.tags ?? []);
       setDays(toDays(itinerary));
@@ -267,6 +275,8 @@ export function ItineraryEditorSheet({
       setCoverImageUrl(null);
       setIsActive(true);
       setDesignType(defaultDesignType);
+      setDurationHours("");
+      setDurationMins("");
       // Default the offered languages to what the guide already speaks so
       // they don't have to retype them per itinerary. They can still edit.
       const guideLangs = Array.isArray(profile.languages)
@@ -278,7 +288,6 @@ export function ItineraryEditorSheet({
       setInclusions([]);
       setImages([]);
     }
-    setLanguageInput("");
     setTagInput("");
     setError(null);
   }, [open, itinerary, defaultCurrency, profile.languages, defaultDesignType]);
@@ -298,20 +307,6 @@ export function ItineraryEditorSheet({
     ]);
   }
 
-  // Language chip operations
-  function addLanguage(raw: string) {
-    const trimmed = raw.trim();
-    if (!trimmed) return;
-    setLanguagesOffered((prev) =>
-      prev.some((l) => l.toLowerCase() === trimmed.toLowerCase())
-        ? prev
-        : [...prev, trimmed],
-    );
-    setLanguageInput("");
-  }
-  function removeLanguage(lang: string) {
-    setLanguagesOffered((prev) => prev.filter((l) => l !== lang));
-  }
 
   // Tag chip operations — accepts "#tag" or "tag", stores lowercase no-#.
   function addTag(raw: string) {
@@ -588,6 +583,7 @@ export function ItineraryEditorSheet({
       languagesOffered,
       tags,
       durationDays: derivedDuration.days,
+      durationMinutes: derivedDuration.minutes,
       durationLabel: derivedDuration.label,
       price: priceValue,
       currency: priceValue !== null ? currency : null,
@@ -634,24 +630,52 @@ export function ItineraryEditorSheet({
     [inclusions],
   );
 
+  // Total minutes for the DURATION design type, combined from the hours / mins
+  // inputs. Minutes are capped at 59 on save; hours are unbounded here.
+  const durationTotalMinutes = useMemo(() => {
+    const h = Math.max(0, parseInt(durationHours, 10) || 0);
+    const m = Math.max(0, Math.min(59, parseInt(durationMins, 10) || 0));
+    return h * 60 + m;
+  }, [durationHours, durationMins]);
+
   /**
-   * Duration auto-derived from designType + the days/time-slots list. The
-   * guide never edits these directly — keeping them in sync with what they
-   * actually planned avoids stale "9 day" labels on a 3-day plan.
-   * - DAYS: count = days.length, label = "N day(s)"
-   * - TIME: it's a single-day plan, so always 1 day.
+   * Duration auto-derived from designType + the schedule inputs. The guide
+   * never edits the stored fields directly — keeping them in sync with what
+   * they actually planned avoids stale labels.
+   * - DAYS: count = days.length, label = "N day(s)".
+   * - TIME: a single-day plan, so always 1 day.
+   * - DURATION: total minutes, label "Xh Ym" (no day count).
    */
   const derivedDuration = useMemo(() => {
+    if (designType === "DURATION") {
+      const label = formatDurationMinutes(durationTotalMinutes);
+      return {
+        days: null as number | null,
+        minutes:
+          durationTotalMinutes > 0 ? (durationTotalMinutes as number | null) : null,
+        label: (label || null) as string | null,
+      };
+    }
     if (designType === "TIME") {
-      return { days: 1 as number | null, label: "1 day" as string | null };
+      return {
+        days: 1 as number | null,
+        minutes: null as number | null,
+        label: "1 day" as string | null,
+      };
     }
     const count = days.length;
-    if (count === 0) return { days: null, label: null };
+    if (count === 0)
+      return {
+        days: null as number | null,
+        minutes: null as number | null,
+        label: null as string | null,
+      };
     return {
-      days: count,
-      label: `${count} day${count === 1 ? "" : "s"}`,
+      days: count as number | null,
+      minutes: null as number | null,
+      label: `${count} day${count === 1 ? "" : "s"}` as string | null,
     };
-  }, [designType, days.length]);
+  }, [designType, days.length, durationTotalMinutes]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -707,7 +731,13 @@ export function ItineraryEditorSheet({
           {/* 2. Schedule — format toggle + day/time-slot list. Duration auto-
               derived from this section and shown as a chip in the header. */}
           <Section
-            title={designType === "TIME" ? "Time slots" : "Days"}
+            title={
+              designType === "TIME"
+                ? "Time slots"
+                : designType === "DURATION"
+                  ? "Duration & steps"
+                  : "Days"
+            }
             action={
               <div className="flex items-center gap-2">
                 <span className="inline-flex h-7 items-center rounded-full bg-zinc-100 px-3 text-[11px] font-semibold text-zinc-700 ring-1 ring-zinc-200/70">
@@ -721,7 +751,11 @@ export function ItineraryEditorSheet({
                   className="h-8 rounded-full text-xs"
                 >
                   <Plus className="size-3.5" />
-                  {designType === "TIME" ? "Add slot" : "Add day"}
+                  {designType === "TIME"
+                    ? "Add slot"
+                    : designType === "DURATION"
+                      ? "Add step"
+                      : "Add day"}
                 </Button>
               </div>
             }
@@ -735,11 +769,13 @@ export function ItineraryEditorSheet({
                   (defaultDesignType === "TIME"
                     ? [
                         { value: "TIME", label: "Single day with times" },
+                        { value: "DURATION", label: "By duration" },
                         { value: "DAYS", label: "Multi-day" },
                       ]
                     : [
                         { value: "DAYS", label: "Multi-day" },
                         { value: "TIME", label: "Single day with times" },
+                        { value: "DURATION", label: "By duration" },
                       ]) as { value: ItineraryDesignType; label: string }[]
                 ).map((opt) => (
                   <button
@@ -759,14 +795,51 @@ export function ItineraryEditorSheet({
               <span className="text-xs text-zinc-500">
                 {designType === "TIME"
                   ? "Each row is a time-of-day slot for one day."
-                  : "Each row is one day in a multi-day plan."}
+                  : designType === "DURATION"
+                    ? "Set one total duration; list optional steps without fixed times."
+                    : "Each row is one day in a multi-day plan."}
               </span>
             </div>
+
+            {designType === "DURATION" && (
+              <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-zinc-50 px-3 py-2 ring-1 ring-zinc-200/70">
+                <span className="text-xs font-semibold text-zinc-600">
+                  Total duration
+                </span>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    inputMode="numeric"
+                    value={durationHours}
+                    onChange={(e) => setDurationHours(e.target.value)}
+                    placeholder="4"
+                    className="h-9 w-20 rounded-lg"
+                    aria-label="Duration hours"
+                  />
+                  <span className="text-xs text-zinc-500">hours</span>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={59}
+                    inputMode="numeric"
+                    value={durationMins}
+                    onChange={(e) => setDurationMins(e.target.value)}
+                    placeholder="30"
+                    className="h-9 w-20 rounded-lg"
+                    aria-label="Duration minutes"
+                  />
+                  <span className="text-xs text-zinc-500">mins</span>
+                </div>
+              </div>
+            )}
             {days.length === 0 ? (
               <p className="rounded-2xl bg-zinc-50 px-4 py-3 text-xs text-zinc-500 ring-1 ring-zinc-200/70">
                 {designType === "TIME"
                   ? "Add time slots like 09:00 – 10:30 for what happens during the day."
-                  : "Add a day-by-day breakdown for the tour."}
+                  : designType === "DURATION"
+                    ? "Set the total duration above. Optionally add steps for what happens during the experience."
+                    : "Add a day-by-day breakdown for the tour."}
               </p>
             ) : (
               <div className="grid gap-3">
@@ -798,7 +871,9 @@ export function ItineraryEditorSheet({
                         </span>
                       ) : (
                         <span className="inline-flex h-9 shrink-0 items-center rounded-full bg-zinc-950 px-3 text-xs font-semibold text-white">
-                          Day {i + 1}
+                          {designType === "DURATION"
+                            ? `Step ${i + 1}`
+                            : `Day ${i + 1}`}
                         </span>
                       )}
                       <Input
@@ -809,7 +884,9 @@ export function ItineraryEditorSheet({
                         placeholder={
                           designType === "TIME"
                             ? "Slot title (e.g. Pidurangala sunrise hike)"
-                            : "Day title (e.g. Arrival & Sigiriya)"
+                            : designType === "DURATION"
+                              ? "Step title (e.g. Cooking class)"
+                              : "Day title (e.g. Arrival & Sigiriya)"
                         }
                         className="h-9 rounded-xl"
                       />
@@ -820,7 +897,11 @@ export function ItineraryEditorSheet({
                         onClick={() => removeDay(d.id)}
                         className="size-9 rounded-full p-0 text-zinc-500 hover:text-red-600"
                         aria-label={
-                          designType === "TIME" ? "Remove slot" : "Remove day"
+                          designType === "TIME"
+                            ? "Remove slot"
+                            : designType === "DURATION"
+                              ? "Remove step"
+                              : "Remove day"
                         }
                       >
                         <Trash2 className="size-3.5" />
@@ -934,53 +1015,10 @@ export function ItineraryEditorSheet({
                   Default is the languages you speak. Add or remove any for
                   this itinerary specifically.
                 </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {languagesOffered.length === 0 ? (
-                    <span className="text-xs text-zinc-400">
-                      No languages selected yet.
-                    </span>
-                  ) : (
-                    languagesOffered.map((lang) => (
-                      <span
-                        key={lang}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-800"
-                      >
-                        {lang}
-                        <button
-                          type="button"
-                          onClick={() => removeLanguage(lang)}
-                          className="text-zinc-500 hover:text-red-600"
-                          aria-label={`Remove ${lang}`}
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    value={languageInput}
-                    onChange={(e) => setLanguageInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === ",") {
-                        e.preventDefault();
-                        addLanguage(languageInput);
-                      }
-                    }}
-                    placeholder="Add a language (e.g. English) and press Enter"
-                    className="h-9 rounded-full text-xs"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addLanguage(languageInput)}
-                    className="h-9 rounded-full text-xs"
-                  >
-                    Add
-                  </Button>
-                </div>
+                <OfferedLanguagesField
+                  value={languagesOffered}
+                  onChange={setLanguagesOffered}
+                />
               </div>
             </Field>
 
@@ -999,7 +1037,7 @@ export function ItineraryEditorSheet({
                         key={t}
                         className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-800 ring-1 ring-blue-200/70"
                       >
-                        #{t}
+                        {t}
                         <button
                           type="button"
                           onClick={() => removeTag(t)}

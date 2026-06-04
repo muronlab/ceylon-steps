@@ -25,6 +25,11 @@ export interface SearchPublicGuidesQuery {
   regions?: string[];
   /** Language names (matches if guide speaks any of them). */
   languages?: string[];
+  /**
+   * Itinerary tags (stored lowercase, no '#'). Matches a guide if any of their
+   * itineraries carries ANY of these tags.
+   */
+  tags?: string[];
   /** Minimum years of experience. */
   minExperience?: number;
   /** ISO 4217 currency code — required when filtering by price range. */
@@ -126,6 +131,11 @@ export class PublicGuidesService {
 
     if (query.languages && query.languages.length > 0) {
       where.languages = { some: { language: { in: query.languages } } };
+    }
+
+    if (query.tags && query.tags.length > 0) {
+      // Guide matches if at least one of their itineraries carries any tag.
+      where.itineraries = { some: { tags: { hasSome: query.tags } } };
     }
 
     const andClauses: Prisma.GuideProfileWhereInput[] = [];

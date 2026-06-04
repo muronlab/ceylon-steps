@@ -26,12 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { GhostInput } from "@/components/ui/ghost-input";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { PhotoUpload } from "@/app/profile/guide/sections/photo-upload";
 import { ActivityDescriptionEditor } from "./activity-description-editor";
@@ -47,17 +42,6 @@ function getInitials(name: string) {
   const last = parts.length > 1 ? parts[parts.length - 1]?.[0] : "";
   return (first + last).toUpperCase();
 }
-
-/** Colour swatches for the business-name title. `null` = default text colour. */
-const TITLE_COLOURS: { value: string | null; label: string }[] = [
-  { value: null, label: "Default" },
-  { value: "#2563eb", label: "Blue" },
-  { value: "#059669", label: "Green" },
-  { value: "#d97706", label: "Amber" },
-  { value: "#e11d48", label: "Red" },
-  { value: "#7c3aed", label: "Violet" },
-  { value: "#0891b2", label: "Teal" },
-];
 
 const STATUS_STYLES: Record<
   ActivityProviderApplication["status"],
@@ -255,7 +239,10 @@ export default function ActivityProfilePage() {
       <Section title="Documents">
         <DocRow label="NIC front" url={application.nicFrontUrl} />
         <DocRow label="NIC back" url={application.nicBackUrl} />
-        <DocRow label="Business registration" url={application.brdDocumentUrl} />
+        <DocRow
+          label="Business registration"
+          url={application.brdDocumentUrl}
+        />
       </Section>
     </div>
   );
@@ -277,7 +264,6 @@ function ActivityProfileEditor({
     natureOfBusiness: profile.natureOfBusiness,
     description: profile.description ?? "",
     address: profile.address,
-    businessNameColor: profile.businessNameColor,
     businessEmail: profile.businessEmail,
     businessPhone: profile.businessPhone,
     businessAddress: profile.businessAddress,
@@ -361,7 +347,6 @@ function ActivityProfileEditor({
         natureOfBusiness: form.natureOfBusiness.trim(),
         description: form.description.trim() || null,
         address: form.address.trim(),
-        businessNameColor: form.businessNameColor,
         // Identity is always the business name; the provider-name option was removed.
         displayBusinessName: true,
         businessEmail: form.businessEmail?.trim() || null,
@@ -490,7 +475,9 @@ function ActivityProfileEditor({
                 </div>
                 <div className="absolute -bottom-1 right-0 flex items-center gap-1">
                   <PhotoUpload
-                    label={profile.profilePhotoUrl ? "Change photo" : "Add photo"}
+                    label={
+                      profile.profilePhotoUrl ? "Change photo" : "Add photo"
+                    }
                     uploading={profileUploading}
                     setUploading={setProfileUploading}
                     pathPrefix={`activity/${profile.id}/profile`}
@@ -514,216 +501,181 @@ function ActivityProfileEditor({
                   )}
                 </div>
               </div>
-              <div className="flex min-w-0 flex-1 flex-wrap items-end justify-between gap-3 pb-2">
-                <div className="min-w-0 flex-1">
-                  <GhostInput
-                    value={form.natureOfBusiness}
-                    onChange={(e) => set("natureOfBusiness", e.target.value)}
-                    placeholder="e.g. water rafting"
-                    aria-label="Business nature"
-                    className="rounded-md text-xs font-semibold uppercase tracking-wider text-zinc-500 transition focus:bg-zinc-50 placeholder:text-zinc-400"
-                  />
-                  <GhostInput
-                    value={form.businessName}
-                    onChange={(e) => set("businessName", e.target.value)}
-                    placeholder="Business name"
-                    aria-label="Business name"
-                    style={{ color: form.businessNameColor ?? undefined }}
-                    className="mt-1 rounded-md text-2xl font-bold tracking-tight text-zinc-950 transition focus:bg-zinc-50 sm:text-3xl"
-                  />
-                </div>
-                <div
-                  className="flex shrink-0 items-center gap-1 pb-1"
-                  role="group"
-                  aria-label="Business name colour"
-                >
-                  {TITLE_COLOURS.map((c) =>
-                    c.value === null ? (
-                      <button
-                        key="default"
-                        type="button"
-                        onClick={() => set("businessNameColor", null)}
-                        title="Default colour"
-                        aria-label="Default colour"
-                        aria-pressed={form.businessNameColor === null}
-                        className={cn(
-                          "grid size-5 place-items-center rounded-full text-[10px] font-bold text-zinc-700 ring-1 ring-zinc-300 transition hover:bg-zinc-100",
-                          form.businessNameColor === null && "ring-2 ring-zinc-900",
-                        )}
-                      >
-                        A
-                      </button>
-                    ) : (
-                      <button
-                        key={c.value}
-                        type="button"
-                        onClick={() => set("businessNameColor", c.value)}
-                        title={`${c.label} title`}
-                        aria-label={`${c.label} title`}
-                        aria-pressed={form.businessNameColor === c.value}
-                        style={{ backgroundColor: c.value }}
-                        className={cn(
-                          "size-5 rounded-full ring-1 ring-black/10 transition hover:scale-110",
-                          form.businessNameColor === c.value &&
-                            "ring-2 ring-zinc-900 ring-offset-1",
-                        )}
-                      />
-                    ),
-                  )}
-                </div>
+              <div className="min-w-0 flex-1 pb-2">
+                <GhostInput
+                  value={form.natureOfBusiness}
+                  onChange={(e) => set("natureOfBusiness", e.target.value)}
+                  placeholder="e.g. water rafting"
+                  aria-label="Business nature"
+                  className="rounded-md text-xs font-semibold uppercase tracking-wider text-zinc-500 transition focus:bg-zinc-50 placeholder:text-zinc-400"
+                />
+                <GhostInput
+                  value={form.businessName}
+                  onChange={(e) => set("businessName", e.target.value)}
+                  placeholder="Business name"
+                  aria-label="Business name"
+                  className="mt-1 rounded-md text-2xl font-bold tracking-tight text-zinc-950 transition focus:bg-zinc-50 sm:text-3xl"
+                />
               </div>
             </div>
           </div>
         </div>
       </div>
 
-    <section className="rounded-3xl bg-white p-5 ring-1 ring-zinc-200">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="text-sm font-semibold tracking-tight text-zinc-950">
-          Public profile
-        </div>
-        <div className="flex items-center gap-3">
-          {savedAt && !saving && (
-            <span className="text-xs text-emerald-600">Saved</span>
-          )}
-          <Button
-            type="button"
-            onClick={save}
-            disabled={saving}
-            className="h-9 rounded-full bg-zinc-950 px-5 text-sm font-semibold text-white hover:bg-zinc-900 disabled:opacity-60"
-          >
-            {saving ? "Saving…" : "Save changes"}
-          </Button>
-        </div>
-      </div>
-
-      {error && (
-        <div className="mb-3 rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-700 ring-1 ring-rose-200">
-          {error}
-        </div>
-      )}
-
-      <Tabs defaultValue="business" className="w-full">
-        <TabsList>
-          <TabsTrigger value="business">Business details</TabsTrigger>
-          <TabsTrigger value="provider">Provider details</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="business" className="mt-4">
-          {/* Rich description — the name, nature and title colour are edited in the header. */}
-          <div>
-            <span className="mb-1.5 block text-xs font-medium text-zinc-600">
-              Description
-            </span>
-            <ActivityDescriptionEditor
-              value={form.description}
-              onChange={(html) => set("description", html)}
-            />
+      <section className="rounded-3xl bg-white p-5 ring-1 ring-zinc-200">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="text-sm font-semibold tracking-tight text-zinc-950">
+            Public profile
           </div>
+          <div className="flex items-center gap-3">
+            {savedAt && !saving && (
+              <span className="text-xs text-emerald-600">Saved</span>
+            )}
+            <Button
+              type="button"
+              onClick={save}
+              disabled={saving}
+              className="h-9 rounded-full bg-zinc-950 px-5 text-sm font-semibold text-white hover:bg-zinc-900 disabled:opacity-60"
+            >
+              {saving ? "Saving…" : "Save changes"}
+            </Button>
+          </div>
+        </div>
 
-          {/* Business contact — defaults to the provider's details */}
-          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <BusinessContactField
-              label="Business email"
-              providerLabel="email"
-              providerValue={form.contactEmail}
-              value={form.businessEmail}
-              onChange={(v) => set("businessEmail", v)}
-              type="email"
-              placeholder="business@email.com"
-            />
-            <BusinessContactField
-              label="Business telephone"
-              providerLabel="telephone"
-              providerValue={form.mobileNumber}
-              value={form.businessPhone}
-              onChange={(v) => set("businessPhone", v)}
-              placeholder="+9477XXXXXXX"
-            />
-            <div className="md:col-span-2">
+        {error && (
+          <div className="mb-3 rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-700 ring-1 ring-rose-200">
+            {error}
+          </div>
+        )}
+
+        <Tabs defaultValue="business" className="w-full">
+          <TabsList>
+            <TabsTrigger value="business">Business details</TabsTrigger>
+            <TabsTrigger value="provider">Provider details</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="business" className="mt-4">
+            {/* Rich description — the name, nature and title colour are edited in the header. */}
+            <div>
+              <span className="mb-1.5 block text-xs font-medium text-zinc-600">
+                Description
+              </span>
+              <ActivityDescriptionEditor
+                value={form.description}
+                onChange={(html) => set("description", html)}
+              />
+            </div>
+
+            {/* Business contact — defaults to the provider's details */}
+            <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
               <BusinessContactField
-                label="Business address"
-                providerLabel="address"
-                providerValue={form.address}
-                value={form.businessAddress}
-                onChange={(v) => set("businessAddress", v)}
-                multiline
-                placeholder="Business address"
+                label="Business email"
+                providerLabel="email"
+                providerValue={form.contactEmail}
+                value={form.businessEmail}
+                onChange={(v) => set("businessEmail", v)}
+                type="email"
+                placeholder="business@email.com"
               />
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="provider" className="mt-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <FieldBlock label="Full name">
-          <Input
-            value={form.fullName}
-            onChange={(e) => set("fullName", e.target.value)}
-            className="h-11 rounded-xl"
-          />
-        </FieldBlock>
-        <FieldBlock label="Mobile number">
-          <Input
-            value={form.mobileNumber}
-            onChange={(e) => set("mobileNumber", e.target.value)}
-            placeholder="+947XXXXXXXX"
-            className="h-11 rounded-xl"
-          />
-        </FieldBlock>
-        <FieldBlock label="Contact email (optional)">
-          <Input
-            type="email"
-            value={form.contactEmail}
-            onChange={(e) => set("contactEmail", e.target.value)}
-            placeholder="you@email.com"
-            className="h-11 rounded-xl"
-          />
-        </FieldBlock>
-        <div className="flex items-end pb-2">
-          <label className="flex items-center gap-3 text-sm text-zinc-700">
-            <Checkbox
-              checked={form.whatsappAvailable}
-              onCheckedChange={(c) => set("whatsappAvailable", c === true)}
-            />
-            Available on WhatsApp
-          </label>
-        </div>
-        <div className="md:col-span-2">
-          <FieldBlock label="Address">
-            <Textarea
-              value={form.address}
-              onChange={(e) => set("address", e.target.value)}
-              className="min-h-20 rounded-xl"
-            />
-          </FieldBlock>
-        </div>
-          </div>
-
-          {/* Verification documents — read-only */}
-          <div className="mt-5 border-t border-zinc-100 pt-5">
-            <div className="text-sm font-semibold tracking-tight text-zinc-950">
-              Verification documents
-            </div>
-            <p className="mb-3 mt-0.5 text-xs text-zinc-500">
-              Read-only. Contact support if any of these need to be updated.
-            </p>
-            <div className="grid gap-2.5">
-              <DocRow label="NIC front" url={profile.nicFrontUrl} />
-              <DocRow label="NIC back" url={profile.nicBackUrl} />
-              <DocRow
-                label="Business registration"
-                url={profile.brdDocumentUrl}
+              <BusinessContactField
+                label="Business telephone"
+                providerLabel="telephone"
+                providerValue={form.mobileNumber}
+                value={form.businessPhone}
+                onChange={(v) => set("businessPhone", v)}
+                placeholder="+9477XXXXXXX"
               />
+              <div className="md:col-span-2">
+                <BusinessContactField
+                  label="Business address"
+                  providerLabel="address"
+                  providerValue={form.address}
+                  value={form.businessAddress}
+                  onChange={(v) => set("businessAddress", v)}
+                  multiline
+                  placeholder="Business address"
+                />
+              </div>
             </div>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </section>
+          </TabsContent>
 
-      <ActivityExperienceRatesEditor profile={profile} onSave={patchProfile} />
+          <TabsContent value="provider" className="mt-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <FieldBlock label="Full name">
+                <Input
+                  value={form.fullName}
+                  onChange={(e) => set("fullName", e.target.value)}
+                  className="h-11 rounded-xl"
+                />
+              </FieldBlock>
+              <FieldBlock label="Mobile number">
+                <Input
+                  value={form.mobileNumber}
+                  onChange={(e) => set("mobileNumber", e.target.value)}
+                  placeholder="+947XXXXXXXX"
+                  className="h-11 rounded-xl"
+                />
+              </FieldBlock>
+              <FieldBlock label="Contact email (optional)">
+                <Input
+                  type="email"
+                  value={form.contactEmail}
+                  onChange={(e) => set("contactEmail", e.target.value)}
+                  placeholder="you@email.com"
+                  className="h-11 rounded-xl"
+                />
+              </FieldBlock>
+              <div className="flex items-end pb-2">
+                <label className="flex items-center gap-3 text-sm text-zinc-700">
+                  <Checkbox
+                    checked={form.whatsappAvailable}
+                    onCheckedChange={(c) =>
+                      set("whatsappAvailable", c === true)
+                    }
+                  />
+                  Available on WhatsApp
+                </label>
+              </div>
+              <div className="md:col-span-2">
+                <FieldBlock label="Address">
+                  <Textarea
+                    value={form.address}
+                    onChange={(e) => set("address", e.target.value)}
+                    className="min-h-20 rounded-xl"
+                  />
+                </FieldBlock>
+              </div>
+            </div>
 
-      <ActivityLanguagesEditor profile={profile} onSaved={onChange} />
+            {/* Verification documents — read-only */}
+            <div className="mt-5 border-t border-zinc-100 pt-5">
+              <div className="text-sm font-semibold tracking-tight text-zinc-950">
+                Verification documents
+              </div>
+              <p className="mb-3 mt-0.5 text-xs text-zinc-500">
+                Read-only. Contact support if any of these need to be updated.
+              </p>
+              <div className="grid gap-2.5">
+                <DocRow label="NIC front" url={profile.nicFrontUrl} />
+                <DocRow label="NIC back" url={profile.nicBackUrl} />
+                <DocRow
+                  label="Business registration"
+                  url={profile.brdDocumentUrl}
+                />
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </section>
+
+      {/* Experience & prices (left) + Languages spoken (right) */}
+      <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
+        <ActivityExperienceRatesEditor
+          profile={profile}
+          onSave={patchProfile}
+        />
+        <ActivityLanguagesEditor profile={profile} onSaved={onChange} />
+      </div>
 
       <ItinerariesEditor
         profile={profile}

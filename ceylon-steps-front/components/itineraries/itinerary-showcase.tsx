@@ -2,18 +2,17 @@
 
 import { useEffect, useId, useRef, useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
-import { useOutsideClick } from "@/hooks/use-outside-click"
 import { Bus, MapPin, X } from "lucide-react"
-import Link from "next/link"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
+import { useOutsideClick } from "@/hooks/use-outside-click"
 import {
-  publicGuidesService,
-  type PublicGuideDetailItinerary,
-  type PublicGuideDetailLanguage,
-  type PublicGuideItineraryCard,
-} from "@/services/public-guides.service"
+  publicItinerariesService,
+  type PublicItineraryDetail,
+} from "@/services/public-itineraries.service"
+import type { PartnerItineraryCard } from "@/services/public-partners.service"
 import { formatDurationMinutes } from "@/lib/itinerary-duration"
+import { flagUrl, languageCountryCode } from "@/lib/language-flags"
 
 const DEFAULT_GRADIENT =
   "bg-[radial-gradient(900px_circle_at_15%_0%,rgba(59,130,246,0.40),transparent_55%),radial-gradient(900px_circle_at_70%_60%,rgba(16,185,129,0.28),transparent_60%),linear-gradient(120deg,rgba(2,132,199,0.22),rgba(34,197,94,0.14))]"
@@ -22,22 +21,6 @@ const PRICE_SCOPE_SUFFIX: Record<string, string> = {
   PER_PERSON: "/ person",
   PER_GROUP: "/ group",
   PER_DAY: "/ day",
-}
-
-interface GuideItinerariesProps {
-  /** Slim card payload — opening a card triggers a detail fetch. */
-  itineraries: PublicGuideItineraryCard[]
-  guideId: string
-  /**
-   * The guide's spoken languages. Used to look up country codes for the
-   * itinerary's `languagesOffered` chips so we can render a flag next to each
-   * one. Falls back to flagless rendering when no match is found.
-   */
-  guideLanguages?: PublicGuideDetailLanguage[]
-}
-
-function flagUrl(code: string) {
-  return `https://flagcdn.com/w40/${code.toLowerCase()}.png`
 }
 
 function formatPrice(value: string | null, currency: string | null): string | null {
@@ -57,7 +40,7 @@ function formatPrice(value: string | null, currency: string | null): string | nu
 }
 
 function deriveDurationLabel(
-  it: PublicGuideItineraryCard | PublicGuideDetailItinerary,
+  it: PartnerItineraryCard | PublicItineraryDetail,
 ): string {
   if (it.durationLabel) return it.durationLabel
   if (it.designType === "DURATION") return formatDurationMinutes(it.durationMinutes)
@@ -65,32 +48,35 @@ function deriveDurationLabel(
   if (it.durationDays && it.durationDays > 0) {
     return `${it.durationDays} day${it.durationDays === 1 ? "" : "s"}`
   }
-  // `days` only exists on the full detail payload — slim cards skip this
-  // branch and just return empty.
   if ("days" in it && it.days.length > 0) {
     return `${it.days.length} day${it.days.length === 1 ? "" : "s"}`
   }
   return ""
 }
 
-export function GuideItineraries({
+/**
+ * Animated itinerary showcase — a card grid where clicking a card morphs it
+ * (Framer `layoutId`) into a full-screen dialog that lazily fetches the full
+ * itinerary, instead of navigating to the itinerary page. Mirrors the guide
+ * profile's `GuideItineraries`, but is owner-agnostic: it loads detail from the
+ * public `/public/itineraries/:id` endpoint, so any owner's cards work.
+ */
+export function ItineraryShowcase({
   itineraries,
-  guideId,
-  guideLanguages = [],
-}: GuideItinerariesProps) {
-  // Lookup: lowercased language name -> country code, derived from the
-  // guide's own spoken languages. Used to attach a flag to each itinerary
-  // language chip.
-  const languageFlagMap = new Map<string, string>()
-  for (const l of guideLanguages) {
-    if (l.countryCode) languageFlagMap.set(l.language.toLowerCase(), l.countryCode)
-  }
-  // `activeCard` drives the dialog open/close + layoutId animations (set
-  // immediately on click so the transition feels instant).
-  // `activeDetail` is the full itinerary fetched lazily once the dialog opens.
-  const [activeCard, setActiveCard] = useState<PublicGuideItineraryCard | null>(null)
-  const [activeDetail, setActiveDetail] =
-    useState<PublicGuideDetailItinerary | null>(null)
+  cta,
+}: {
+  itineraries: PartnerItineraryCard[]
+  /**
+   * Optional primary action shown at the foot of the open dialog (e.g. "Message
+   * the host"). The dialog closes after it fires so any page-level surface it
+   * opens (chat popup, etc.) is visible.
+   */
+  cta?: { label: string; onClick: () => void }
+}) {
+  const [activeCard, setActiveCard] = useState<PartnerItineraryCard | null>(null)
+  const [activeDetail, setActiveDetail] = useState<PublicItineraryDetail | null>(
+    null,
+  )
   const [detailLoading, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState<string | null>(null)
   const [lightboxImage, setLightboxImage] = useState<string | null>(null)
@@ -103,17 +89,16 @@ export function GuideItineraries({
     setDetailError(null)
   }
 
-  // Fetch the full itinerary when a card is opened. Cancels gracefully if the
-  // user closes the dialog or opens a different itinerary before the fetch
-  // settles.
+  // Lazily fetch the full itinerary once a card opens; cancel cleanly if the
+  // user closes or switches cards before it settles.
   useEffect(() => {
     if (!activeCard) return
     let cancelled = false
     setActiveDetail(null)
     setDetailError(null)
     setDetailLoading(true)
-    publicGuidesService
-      .getItinerary(guideId, activeCard.id)
+    publicItinerariesService
+      .findOne(activeCard.id)
       .then((data) => {
         if (cancelled) return
         setActiveDetail(data)
@@ -129,7 +114,7 @@ export function GuideItineraries({
     return () => {
       cancelled = true
     }
-  }, [activeCard, guideId])
+  }, [activeCard])
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -147,7 +132,7 @@ export function GuideItineraries({
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [activeCard, lightboxImage])
 
-  useOutsideClick(ref, () => closeDialog())
+  useOutsideClickClose(ref, () => closeDialog())
 
   const included =
     activeDetail?.inclusions.filter((i) => i.kind === "INCLUDED") ?? []
@@ -159,12 +144,7 @@ export function GuideItineraries({
   const activeDuration = activeCard ? deriveDurationLabel(activeCard) : ""
 
   return (
-    <div className="mt-8">
-      <div className="text-sm font-semibold text-zinc-950">Itineraries</div>
-      <div className="mt-1 text-xs text-zinc-500">
-        Sample packages — click a card to see the full plan.
-      </div>
-
+    <>
       <AnimatePresence>
         {activeCard && (
           <motion.div
@@ -185,9 +165,6 @@ export function GuideItineraries({
               className="flex h-full max-h-[92%] w-full max-w-[960px] flex-col overflow-hidden rounded-4xl bg-white shadow-2xl"
             >
               <div className="flex-1 overflow-auto">
-                {/* Cover — driven entirely by the slim card so the layoutId
-                    animation runs instantly without waiting for the detail
-                    fetch. */}
                 <div className="relative">
                   {activeCard.coverImageUrl ? (
                     <motion.div
@@ -248,10 +225,6 @@ export function GuideItineraries({
                   </div>
                 </div>
 
-                {/* Body — title/subtitle live on the card so they appear
-                    instantly. Everything below (languages, overview, days,
-                    inclusions, transport, gallery, tags) needs the lazy-
-                    loaded detail. */}
                 <div className="p-6 sm:p-8">
                   <motion.h3
                     layoutId={`title-${activeCard.id}-${id}`}
@@ -283,12 +256,12 @@ export function GuideItineraries({
 
                   {activeDetail && (
                     <>
-                      {/* Languages offered — each chip carries the country flag
-                          sourced from the guide's own language list. */}
+                      {/* Languages offered — flags resolved from the shared
+                          language dataset (names → country code). */}
                       {activeDetail.languagesOffered.length > 0 && (
                         <div className="mt-4 flex flex-wrap gap-1.5">
                           {activeDetail.languagesOffered.map((lang) => {
-                            const code = languageFlagMap.get(lang.toLowerCase())
+                            const code = languageCountryCode(lang)
                             return (
                               <span
                                 key={`lang-${lang}`}
@@ -319,7 +292,6 @@ export function GuideItineraries({
                         transition={{ delay: 0.1 }}
                         className="mt-8 space-y-8 pb-10 text-zinc-700"
                       >
-                        {/* Overview (HTML from Tiptap) */}
                         {activeDetail.overview && (
                           <div
                             className="bio-content space-y-3 text-base leading-7 text-zinc-700"
@@ -329,7 +301,6 @@ export function GuideItineraries({
                           />
                         )}
 
-                        {/* Days / Time-slot plan */}
                         {activeDetail.days.length > 0 && (
                           <div className="space-y-4">
                             <h4 className="text-base font-semibold text-zinc-900">
@@ -370,7 +341,6 @@ export function GuideItineraries({
                           </div>
                         )}
 
-                        {/* Inclusions / Exclusions */}
                         {(included.length > 0 || excluded.length > 0) && (
                           <div className="grid gap-6 sm:grid-cols-2">
                             {included.length > 0 && (
@@ -380,10 +350,7 @@ export function GuideItineraries({
                                 </h4>
                                 <ul className="space-y-2 text-sm">
                                   {included.map((i) => (
-                                    <li
-                                      key={i.id}
-                                      className="flex items-start gap-2"
-                                    >
+                                    <li key={i.id} className="flex items-start gap-2">
                                       <span aria-hidden>✅</span>
                                       <span>{i.text}</span>
                                     </li>
@@ -398,10 +365,7 @@ export function GuideItineraries({
                                 </h4>
                                 <ul className="space-y-2 text-sm text-zinc-500">
                                   {excluded.map((i) => (
-                                    <li
-                                      key={i.id}
-                                      className="flex items-start gap-2"
-                                    >
+                                    <li key={i.id} className="flex items-start gap-2">
                                       <span aria-hidden>❌</span>
                                       <span>{i.text}</span>
                                     </li>
@@ -412,7 +376,6 @@ export function GuideItineraries({
                           </div>
                         )}
 
-                        {/* Transport + Meeting */}
                         {(activeDetail.transportation ||
                           activeDetail.meetingLocation) && (
                           <div className="space-y-4 rounded-3xl bg-zinc-50 p-6">
@@ -449,7 +412,6 @@ export function GuideItineraries({
                           </div>
                         )}
 
-                        {/* Gallery */}
                         {activeDetail.galleryImages.length > 0 && (
                           <div className="space-y-4">
                             <h4 className="text-base font-semibold text-zinc-900">
@@ -460,9 +422,7 @@ export function GuideItineraries({
                                 <button
                                   key={img.id}
                                   type="button"
-                                  onClick={() =>
-                                    setLightboxImage(img.imageUrl)
-                                  }
+                                  onClick={() => setLightboxImage(img.imageUrl)}
                                   className="group/img relative aspect-square cursor-zoom-in overflow-hidden rounded-2xl bg-zinc-100 ring-1 ring-zinc-200/50"
                                 >
                                   <Image
@@ -478,7 +438,6 @@ export function GuideItineraries({
                           </div>
                         )}
 
-                        {/* Hashtags — small at the foot of the body. */}
                         {activeDetail.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1 pt-2">
                             {activeDetail.tags.map((t) => (
@@ -492,15 +451,20 @@ export function GuideItineraries({
                           </div>
                         )}
 
-                        {/* CTA */}
-                        <div className="sticky bottom-0 bg-white/80 pt-6 backdrop-blur-md">
-                          <Link
-                            href={`/partner/guide?ref=${encodeURIComponent(guideId)}&itinerary=${encodeURIComponent(activeCard.id)}`}
-                            className="inline-flex h-14 w-full items-center justify-center rounded-3xl bg-zinc-950 px-8 text-base font-semibold text-white shadow-xl transition hover:bg-zinc-900"
-                          >
-                            Confirm and contact guide
-                          </Link>
-                        </div>
+                        {cta && (
+                          <div className="sticky bottom-0 bg-white/80 pt-6 backdrop-blur-md">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                cta.onClick()
+                                closeDialog()
+                              }}
+                              className="inline-flex h-14 w-full items-center justify-center rounded-3xl bg-zinc-950 px-8 text-base font-semibold text-white shadow-xl transition hover:bg-zinc-900"
+                            >
+                              {cta.label}
+                            </button>
+                          </div>
+                        )}
                       </motion.div>
                     </>
                   )}
@@ -576,10 +540,7 @@ export function GuideItineraries({
                 ) : (
                   <motion.div
                     layoutId={`image-${it.id}-${id}`}
-                    className={cn(
-                      "h-36 w-full",
-                      it.imageGradient ?? DEFAULT_GRADIENT,
-                    )}
+                    className={cn("h-36 w-full", it.imageGradient ?? DEFAULT_GRADIENT)}
                   >
                     <div className="absolute inset-0 opacity-65 [background-image:repeating-linear-gradient(135deg,rgba(255,255,255,0.22)_0px,rgba(255,255,255,0.22)_2px,transparent_2px,transparent_14px)]" />
                   </motion.div>
@@ -624,6 +585,33 @@ export function GuideItineraries({
                   </motion.div>
                 )}
 
+                {/* Languages with flags — same treatment as the listing tile. */}
+                {it.languagesOffered.length > 0 && (
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {it.languagesOffered.slice(0, 4).map((l) => {
+                      const code = languageCountryCode(l)
+                      return (
+                        <div key={l} className="flex items-center gap-1.5">
+                          {code && (
+                            <div className="relative h-4 w-6 shrink-0 overflow-hidden rounded-[2px] ring-1 ring-zinc-200">
+                              <Image
+                                src={flagUrl(code)}
+                                alt=""
+                                fill
+                                className="object-cover"
+                                unoptimized
+                              />
+                            </div>
+                          )}
+                          <span className="text-[13px] font-medium text-zinc-700">
+                            {l}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+
                 <div className="mt-4">
                   <button
                     type="button"
@@ -641,6 +629,10 @@ export function GuideItineraries({
           )
         })}
       </div>
-    </div>
+    </>
   )
 }
+
+// Local import kept at the bottom to mirror the guide component's hook usage
+// without colliding with the default export ordering above.
+import { useOutsideClick as useOutsideClickClose } from "@/hooks/use-outside-click"

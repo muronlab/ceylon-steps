@@ -1,4 +1,7 @@
 import apiClient from "./api-client"
+import type { TopTag, TopTagsResponse } from "./public-itineraries.service"
+
+export type { TopTag } from "./public-itineraries.service"
 
 export type GuideSort =
   | "relevance"
@@ -91,8 +94,10 @@ export interface PublicGuideItineraryCard {
   id: string
   title: string
   subtitle: string | null
-  designType: "DAYS" | "TIME"
+  designType: "DAYS" | "TIME" | "DURATION"
   durationDays: number | null
+  /** Total minutes — set only when designType is DURATION. */
+  durationMinutes: number | null
   durationLabel: string | null
   price: string | null
   currency: string | null
@@ -110,10 +115,12 @@ export interface PublicGuideDetailItinerary {
   id: string
   title: string
   subtitle: string | null
-  designType: "DAYS" | "TIME"
+  designType: "DAYS" | "TIME" | "DURATION"
   languagesOffered: string[]
   tags: string[]
   durationDays: number | null
+  /** Total minutes — set only when designType is DURATION. */
+  durationMinutes: number | null
   durationLabel: string | null
   price: string | null
   currency: string | null
@@ -166,6 +173,8 @@ export interface SearchPublicGuidesParams {
   category?: string
   regions?: string[]
   languages?: string[]
+  /** Itinerary tags — matches guides who have an itinerary with any of them. */
+  tags?: string[]
   minExperience?: number
   currency?: string
   minPrice?: number
@@ -188,6 +197,7 @@ export const publicGuidesService = {
         category: params.category,
         regions: csv(params.regions),
         languages: csv(params.languages),
+        tags: csv(params.tags),
         minExperience: params.minExperience,
         currency: params.currency,
         minPrice: params.minPrice,
@@ -203,6 +213,12 @@ export const publicGuidesService = {
   async facets(): Promise<PublicGuideFacets> {
     const res = await apiClient.get<PublicGuideFacets>("/public/guides/facets")
     return res.data
+  },
+
+  /** Most-used itinerary tags among visible guides (top 20, with counts). */
+  async topTags(): Promise<TopTag[]> {
+    const res = await apiClient.get<TopTagsResponse>("/public/guides/top-tags")
+    return res.data.tags
   },
 
   async findOne(id: string): Promise<PublicGuideDetail> {

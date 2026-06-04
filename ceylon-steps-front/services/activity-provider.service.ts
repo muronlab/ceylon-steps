@@ -4,6 +4,9 @@ export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED"
 
 export type LanguageLevel = "CONVERSATIONAL" | "FLUENT" | "NATIVE"
 
+/** Scope of a fixed package price. */
+export type ActivityPackageScope = "PER_PERSON" | "PER_GROUP"
+
 export interface ActivityProviderLanguage {
   id: string
   activityProviderProfileId: string
@@ -81,6 +84,9 @@ export interface ActivityProviderProfile {
   // Prisma Decimal values are serialised as strings over the wire.
   pricePerHour: string | null
   pricePerDay: string | null
+  /** Fixed package price (alternative to hourly/daily rates). */
+  packagePrice: string | null
+  packagePriceScope: ActivityPackageScope | null
   isActive: boolean
   adminEnabled: boolean
   approvedAt: string
@@ -126,6 +132,8 @@ export interface UpdateActivityProviderProfilePayload {
   currency?: string | null
   pricePerHour?: number | null
   pricePerDay?: number | null
+  packagePrice?: number | null
+  packagePriceScope?: ActivityPackageScope | null
   isActive?: boolean
 }
 

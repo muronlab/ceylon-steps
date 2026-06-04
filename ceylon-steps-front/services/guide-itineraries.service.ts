@@ -1,7 +1,7 @@
 import apiClient from "./api-client"
 
 export type ItineraryInclusionKind = "INCLUDED" | "EXCLUDED"
-export type ItineraryDesignType = "DAYS" | "TIME"
+export type ItineraryDesignType = "DAYS" | "TIME" | "DURATION"
 export type ItineraryPriceScope = "PER_PERSON" | "PER_GROUP" | "PER_DAY"
 
 export interface ItineraryDay {
@@ -46,6 +46,8 @@ export interface GuideItinerary {
   languagesOffered: string[]
   tags: string[]
   durationDays: number | null
+  /** Total minutes — set only when designType is DURATION. */
+  durationMinutes: number | null
   durationLabel: string | null
   /** Prisma serialises Decimal as a string over JSON. */
   price: string | null
@@ -76,6 +78,7 @@ export interface SaveItineraryPayload {
   languagesOffered?: string[]
   tags?: string[]
   durationDays?: number | null
+  durationMinutes?: number | null
   durationLabel?: string | null
   price?: number | null
   currency?: string | null

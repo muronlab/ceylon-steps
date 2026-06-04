@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { AppStoreBadges } from "@/components/common/app-store-badges"
 
 const MARQUEE_ITEMS = [
   "Plan your trip",
@@ -28,7 +29,7 @@ export function HomeFooter() {
     <footer className="mt-16 bg-zinc-50 px-4 pb-6 pt-0 sm:px-6 lg:px-8" id="contact">
       <div className="overflow-hidden rounded-3xl bg-zinc-950 text-white ring-1 ring-zinc-800 sm:rounded-4xl">
         <div className="w-full px-6 py-10 sm:px-10 sm:py-12 lg:px-14 lg:py-14">
-          <div className="grid gap-12 lg:grid-cols-[1.1fr_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] lg:gap-10">
+          <div className="grid gap-12 lg:grid-cols-[1.1fr_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,auto)] lg:gap-10">
             <div className="min-w-0">
               <div className="text-sm font-semibold tracking-[0.16em] text-white">
                 CEYLON STEP
@@ -113,6 +114,8 @@ export function HomeFooter() {
                 </Link>
               </div>
             </div>
+
+            <AppStoreBadges tone="dark" />
           </div>
         </div>
 

@@ -1,9 +1,12 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { PublicGuidesService, type GuideSort } from './public-guides.service';
+import {
+  PublicPartnersService,
+  type ActivityProviderSort,
+} from './public-partners.service';
 import { PublicItinerariesService } from './public-itineraries.service';
 
-const SORT_VALUES = new Set<GuideSort>([
+const ACTIVITY_SORT_VALUES = new Set<ActivityProviderSort>([
   'relevance',
   'newest',
   'experience-desc',
@@ -11,10 +14,9 @@ const SORT_VALUES = new Set<GuideSort>([
   'price-desc',
 ]);
 
-function parseCsv(value: string | string[] | undefined): string[] | undefined {
+function parseCsv(value: string | undefined): string[] | undefined {
   if (!value) return undefined;
-  const raw = Array.isArray(value) ? value.join(',') : value;
-  const parts = raw
+  const parts = value
     .split(',')
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
@@ -35,24 +37,23 @@ function parseDecimal(value: string | undefined): number | undefined {
   return n;
 }
 
-@ApiTags('public/guides')
-@Controller('public/guides')
-export class PublicGuidesController {
+@ApiTags('public/partners')
+@Controller('public')
+export class PublicPartnersController {
   constructor(
-    private readonly guides: PublicGuidesService,
+    private readonly partners: PublicPartnersService,
     private readonly itineraries: PublicItinerariesService,
   ) {}
 
-  @ApiOperation({ summary: 'Search active guide profiles (public, paginated)' })
+  @ApiOperation({
+    summary:
+      'Search visible activity-provider profiles (public, paginated). Returns provider cards for the activities directory.',
+  })
   @ApiQuery({ name: 'search', required: false })
-  @ApiQuery({ name: 'category', required: false })
-  @ApiQuery({ name: 'regions', required: false, description: 'Comma-separated list.' })
-  @ApiQuery({ name: 'languages', required: false, description: 'Comma-separated list.' })
   @ApiQuery({
-    name: 'tags',
+    name: 'languages',
     required: false,
-    description:
-      'Comma-separated list. Matches guides who have an itinerary carrying ANY of these tags.',
+    description: 'Comma-separated list.',
   })
   @ApiQuery({ name: 'minExperience', required: false })
   @ApiQuery({ name: 'currency', required: false })
@@ -65,13 +66,10 @@ export class PublicGuidesController {
   })
   @ApiQuery({ name: 'take', required: false })
   @ApiQuery({ name: 'skip', required: false })
-  @Get()
-  async search(
+  @Get('activity-providers')
+  async searchActivityProviders(
     @Query('search') search?: string,
-    @Query('category') category?: string,
-    @Query('regions') regions?: string,
     @Query('languages') languages?: string,
-    @Query('tags') tags?: string,
     @Query('minExperience') minExperience?: string,
     @Query('currency') currency?: string,
     @Query('minPrice') minPrice?: string,
@@ -80,13 +78,13 @@ export class PublicGuidesController {
     @Query('take') take?: string,
     @Query('skip') skip?: string,
   ) {
-    const validSort = sort && SORT_VALUES.has(sort as GuideSort) ? (sort as GuideSort) : undefined;
-    return this.guides.search({
+    const validSort =
+      sort && ACTIVITY_SORT_VALUES.has(sort as ActivityProviderSort)
+        ? (sort as ActivityProviderSort)
+        : undefined;
+    return this.partners.searchActivityProviders({
       search,
-      category,
-      regions: parseCsv(regions),
       languages: parseCsv(languages),
-      tags: parseCsv(tags),
       minExperience: parseInteger(minExperience),
       currency: currency?.toUpperCase(),
       minPrice: parseDecimal(minPrice),
@@ -97,39 +95,30 @@ export class PublicGuidesController {
     });
   }
 
-  @ApiOperation({ summary: 'Filter values currently in use across active profiles' })
-  @Get('facets')
-  async facets() {
-    return this.guides.facets();
+  @ApiOperation({
+    summary:
+      'Most-used itinerary tags among visible activity providers (top 20, with usage counts).',
+  })
+  @Get('activity-providers/top-tags')
+  async activityProviderTopTags() {
+    return this.itineraries.topTags('ACTIVITY_PROVIDER');
   }
 
   @ApiOperation({
     summary:
-      'Most-used itinerary tags among visible guides (top 20, with usage counts).',
+      'Public activity-provider profile by id — header, contact, languages, gallery, and itinerary cards. KYC fields stripped. Only returned when the profile is publicly visible.',
   })
-  @Get('top-tags')
-  async topTags() {
-    return this.itineraries.topTags('GUIDE');
+  @Get('activity-providers/:id')
+  async activityProvider(@Param('id') id: string) {
+    return this.partners.getActivityProvider(id);
   }
 
   @ApiOperation({
     summary:
-      'Public guide profile by id — header fields, languages, gallery, and itinerary CARDS (no day/inclusion/gallery details to keep the response small).',
+      'Public transport-provider profile by id — header, contact, safari jeeps, vehicles, driver services, and itinerary cards. KYC fields stripped. Only returned when the profile is publicly visible.',
   })
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.guides.findOne(id);
-  }
-
-  @ApiOperation({
-    summary:
-      'Full itinerary detail (overview HTML, days, inclusions, gallery). Loaded on demand when a card is opened.',
-  })
-  @Get(':guideId/itineraries/:itineraryId')
-  async getItineraryDetail(
-    @Param('guideId') guideId: string,
-    @Param('itineraryId') itineraryId: string,
-  ) {
-    return this.guides.getItineraryDetail(guideId, itineraryId);
+  @Get('transport-providers/:id')
+  async transportProvider(@Param('id') id: string) {
+    return this.partners.getTransportProvider(id);
   }
 }
