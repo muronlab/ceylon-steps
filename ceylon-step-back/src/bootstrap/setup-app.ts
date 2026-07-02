@@ -4,14 +4,22 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import csrf from 'csurf';
 import { GlobalExceptionFilter } from '../common/filters/global-exception.filter';
-import { CORS_ORIGINS } from './cors';
+import { getCorsOriginConfig } from './cors';
 import { buildSessionMiddleware } from './session';
 
 export async function setupApp(app: INestApplication) {
   app.enableShutdownHooks();
   app.setGlobalPrefix('api/v1');
+
+  const config = app.get(ConfigService);
+  const corsOriginConfig = getCorsOriginConfig({
+    NODE_ENV: config.get<string>('NODE_ENV'),
+    CORS_ALLOW_ALL_ORIGINS: config.get<string>('CORS_ALLOW_ALL_ORIGINS'),
+    CORS_ALLOWED_ORIGINS: config.get<string>('CORS_ALLOWED_ORIGINS'),
+  });
+
   app.enableCors({
-    origin: CORS_ORIGINS,
+    origin: corsOriginConfig,
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: ['Content-Type', 'Accept', 'Authorization', 'x-csrf-token'],
@@ -41,8 +49,6 @@ export async function setupApp(app: INestApplication) {
     .build();
   const swaggerDoc = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, swaggerDoc);
-
-  const config = app.get(ConfigService);
 
   // Cookie session is shared with the WebSocket gateway via buildSessionMiddleware.
   app.use(buildSessionMiddleware(config));

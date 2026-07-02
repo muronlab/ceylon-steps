@@ -57,6 +57,8 @@ pnpm start:dev
 | `SESSION_COOKIE_SAMESITE` | `lax` / `strict` / `none` |
 | `SESSION_COOKIE_DOMAIN` | Set when frontends are on a different subdomain |
 | `CSRF_ENABLED` | `true` outside test |
+| `CORS_ALLOW_ALL_ORIGINS` | Set to `true` in development to accept requests from any frontend origin |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated frontend origins for production, e.g. `https://app.example.com,https://admin.example.com` |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_BUCKET` | File uploads |
 | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASS`, `MAIL_FROM` | Outgoing email (OTP, notifications) |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth (optional) |
