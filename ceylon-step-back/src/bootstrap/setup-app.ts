@@ -1,8 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { buildSwaggerInitJS, getSwaggerAssetsAbsoluteFSPath } from '@nestjs/swagger/dist/swagger-ui/swagger-ui';
-import express from 'express';
 import helmet from 'helmet';
 import csrf from 'csurf';
 import { GlobalExceptionFilter } from '../common/filters/global-exception.filter';
@@ -51,14 +49,13 @@ export async function setupApp(app: INestApplication) {
     .build();
   const swaggerDoc = SwaggerModule.createDocument(app, swaggerConfig);
 
-  const httpAdapter = app.getHttpAdapter();
-  httpAdapter.use('/api/docs', express.static(getSwaggerAssetsAbsoluteFSPath(), { index: false }));
-  httpAdapter.get('/api/docs/swagger-ui-init.js', (_req, res) => {
-    res.type('application/javascript');
-    res.send(buildSwaggerInitJS(swaggerDoc));
+  SwaggerModule.setup('api/docs', app, swaggerDoc, {
+    customCssUrl: 'https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css',
+    customJs: [
+      'https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js',
+      'https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js',
+    ],
   });
-
-  SwaggerModule.setup('api/docs', app, swaggerDoc);
 
   // Cookie session is shared with the WebSocket gateway via buildSessionMiddleware.
   app.use(buildSessionMiddleware(config));
