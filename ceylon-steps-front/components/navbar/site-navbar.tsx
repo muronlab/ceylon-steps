@@ -91,7 +91,9 @@ function NotificationsSheet({ trigger }: { trigger: React.ReactNode }) {
 
         <div className="mt-6 flex items-center justify-end gap-3 border-t border-zinc-200 pt-4 pr-4 pb-4">
           <SheetClose asChild>
-           
+            <Button variant="outline" className="rounded-full text-xs" size="sm">
+              Close
+            </Button>
           </SheetClose>
           <Button className="rounded-full bg-zinc-950 text-white hover:bg-zinc-900 text-xs" size="sm">
             Mark all as read

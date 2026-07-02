@@ -110,7 +110,7 @@ function VerifyEmailInner() {
           </Button>
 
           <Button
-            loading={loading}
+            type="submit"
             loading={loading}
             className="h-12 rounded-full bg-zinc-950 text-white hover:bg-zinc-900 font-semibold shadow-lg shadow-zinc-950/20"
           >

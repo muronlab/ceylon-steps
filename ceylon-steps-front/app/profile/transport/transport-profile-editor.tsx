@@ -193,7 +193,9 @@ export function TransportProfileEditor({
               uploading={coverUploading}
               setUploading={setCoverUploading}
               pathPrefix={`transport/${profile.id}/cover`}
-              onUploaded={(url) => patchProfile({ coverPhotoUrl: url })}
+              onUploaded={async (url) => {
+                await patchProfile({ coverPhotoUrl: url })
+              }}
               icon={<ImageIcon className="size-4" />}
             />
           </div>
@@ -232,9 +234,9 @@ export function TransportProfileEditor({
                       uploading={profileUploading}
                       setUploading={setProfileUploading}
                       pathPrefix={`transport/${profile.id}/profile`}
-                      onUploaded={(url) =>
-                        patchProfile({ profilePhotoUrl: url })
-                      }
+                      onUploaded={async (url) => {
+                        await patchProfile({ profilePhotoUrl: url })
+                      }}
                       icon={<Camera className="size-3.5" />}
                       compact
                     />

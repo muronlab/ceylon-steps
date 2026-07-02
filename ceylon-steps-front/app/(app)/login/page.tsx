@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Eye, EyeOff } from "lucide-react"
 
@@ -16,8 +16,9 @@ import { useAuth } from "@/context/auth-context"
 export default function LoginPage() {
   const { login } = useAuth()
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirect = searchParams.get("redirect") || "/"
+  const redirect = (typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("redirect")
+    : null) || "/"
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")

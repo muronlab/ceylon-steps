@@ -21,9 +21,13 @@ function Calendar({
   locale,
   formatters,
   components,
+  fromYear,
+  toYear,
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>["variant"]
+  fromYear?: number
+  toYear?: number
 }) {
   const defaultClassNames = getDefaultClassNames()
 
@@ -132,7 +136,7 @@ function Calendar({
         ),
         hidden: cn("invisible", defaultClassNames.hidden),
         ...classNames,
-      }}
+      } as any }
       components={{
         Root: ({ className, rootRef, ...props }) => {
           return (
