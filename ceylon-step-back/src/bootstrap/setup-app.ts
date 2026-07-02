@@ -13,9 +13,9 @@ export async function setupApp(app: INestApplication) {
 
   const config = app.get(ConfigService);
   const corsOriginConfig = getCorsOriginConfig({
-    NODE_ENV: config.get<string>('NODE_ENV'),
-    CORS_ALLOW_ALL_ORIGINS: config.get<string>('CORS_ALLOW_ALL_ORIGINS'),
-    CORS_ALLOWED_ORIGINS: config.get<string>('CORS_ALLOWED_ORIGINS'),
+    NODE_ENV: config.get('NODE_ENV'),
+    CORS_ALLOW_ALL_ORIGINS: config.get('CORS_ALLOW_ALL_ORIGINS'),
+    CORS_ALLOWED_ORIGINS: config.get('CORS_ALLOWED_ORIGINS'),
   });
 
   app.enableCors({
