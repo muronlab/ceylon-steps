@@ -8,6 +8,8 @@ export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(3000),
   APP_URL: z.string().url(),
+  FRONTEND_URL: z.string().url().optional().default('http://localhost:3000'),
+  ADMIN_FRONTEND_URL: z.string().url().optional().default('http://localhost:3001'),
 
   DATABASE_URL: z.string().min(1),
 
@@ -40,6 +42,12 @@ export const envSchema = z.object({
   APPLE_KEY_ID: z.string().optional().default(''),
   APPLE_PRIVATE_KEY: z.string().optional().default(''),
   APPLE_CALLBACK_URL: z.string().url().optional().default('http://localhost:3000/api/v1/auth/oauth/apple/callback'),
+
+  SUPABASE_URL: z.string().url().optional().default(''),
+  SUPABASE_KEY: z.string().optional().default(''),
+  SUPABASE_BUCKET: z.string().optional().default(''),
+
+  MOBILE_OAUTH_REDIRECT: z.string().optional().default(''),
 });
 
 export type Env = z.infer<typeof envSchema>;
