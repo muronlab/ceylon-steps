@@ -17,8 +17,8 @@ export const envSchema = z.object({
   SESSION_COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).default('lax'),
   SESSION_COOKIE_DOMAIN: z.string().optional().default(''),
 
-  CSRF_ENABLED: boolFromString.default(true),
-  CORS_ALLOW_ALL_ORIGINS: boolFromString.default(false),
+  CSRF_ENABLED: boolFromString.default(false),
+  CORS_ALLOW_ALL_ORIGINS: boolFromString.default(true),
   CORS_ALLOWED_ORIGINS: z.string().optional().default(''),
 
   SMTP_HOST: z.string().optional().default(''),

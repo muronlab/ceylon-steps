@@ -17,9 +17,9 @@ function isTrueValue(value: unknown): boolean {
  * Allow-listed browser origins for CORS. Shared by the HTTP layer
  * (`setup-app.ts`) and the WebSocket gateway so they never drift apart.
  *
- * In development, the backend can be configured to accept requests from any
- * frontend origin. In production, the allow-list is controlled by
- * `CORS_ALLOWED_ORIGINS` so cookie-based sessions stay locked to known hosts.
+ * The backend can be configured to accept requests from any origin.
+ * `CORS_ALLOW_ALL_ORIGINS=true` enables universal CORS for all environments.
+ * `CORS_ALLOWED_ORIGINS` still works when a fixed allow-list is needed.
  */
 export function getCorsOriginConfig(
   env: Record<string, unknown> = process.env,
@@ -33,7 +33,7 @@ export function getCorsOriginConfig(
   const nodeEnv = String(env.NODE_ENV ?? '').toLowerCase();
   if (nodeEnv === 'development') return true;
 
-  return ['http://localhost:3000', 'http://localhost:3001'];
+  return true;
 }
 
 export const CORS_ORIGINS = getCorsOriginConfig();
